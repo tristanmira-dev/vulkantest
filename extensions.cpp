@@ -8,6 +8,7 @@ constexpr bool enableValidationLayers{ true };
 #endif
 
 
+/*Get the glfw required extensions*/
 std::vector<const char*> getRequiredInstanceExtensions() {
 	uint32_t glfwExtensionCount{};
 	auto glfwExtensions{ glfwGetRequiredInstanceExtensions(&glfwExtensionCount) };

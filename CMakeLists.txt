@@ -39,8 +39,10 @@ add_subdirectory(utils)
 
 
 add_executable(mainStuff main.cpp)
+target_compile_definitions(mainStuff PRIVATE VULKAN_HPP_NO_STRUCT_CONSTRUCTORS)
+
 target_include_directories(mainStuff PRIVATE include)
-target_sources(mainStuff PRIVATE extensions.cpp)
+target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp)
 
 target_link_libraries(mainStuff PRIVATE Vulkan::Vulkan)
 target_link_libraries(mainStuff PRIVATE glfw)
