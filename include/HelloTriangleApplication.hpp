@@ -29,11 +29,21 @@ private:
     vk::raii::DebugUtilsMessengerEXT debugMessenger{ nullptr };
 
     /*Graphics card*/
-    vk::raii::Device device{ nullptr };
+    vk::raii::Device device{ nullptr }; /*Logical Device*/
     vk::raii::Queue graphicsQueue{ nullptr };
     vk::raii::Queue presentQueue{ nullptr };
     vk::raii::PhysicalDevice physicalDevice{ nullptr };
     vk::raii::SurfaceKHR surface{ nullptr };
+    
+    /*Swap chain*/
+    vk::raii::SwapchainKHR swapChain{ nullptr };
+    std::vector<vk::Image> swapChainImages;
+    vk::Format swpChainImageFormat{vk::Format::eUndefined};
+    vk::SurfaceFormatKHR swapChainSurfaceFormat;
+    vk::Extent2D swapChainExtent;
+    
+    /*Image Views*/
+    std::vector<vk::raii::ImageView> swapChainImageViews;
 
     void createInstance();
     
@@ -54,6 +64,9 @@ private:
     void cleanup();
 
     void createSwapChain();
+
+
+    void createImageView();
 };
 
 

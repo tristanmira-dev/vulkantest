@@ -1,6 +1,12 @@
 #include <stdexcept>
 #include <vector>
+#include <cstdint>
+#include <limits>
+#include <algorithm>
 
+#include <iostream>
+
+#define NOMINMAX
 
 #include "HelloTriangleApplication.hpp"
 #include "extensions.hpp"
@@ -20,6 +26,8 @@ constexpr int HEIGHT{ 600 };
 
 namespace {
     vk::SurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats);
+    vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availPresentModes);
+    vk::Extent2D chooseSwapExtent(vk::SurfaceCapabilitiesKHR const& capabilities, GLFWwindow* window);
 }
 
 void HelloTriangleApplication::run() {
@@ -31,7 +39,8 @@ void HelloTriangleApplication::run() {
     //instance.submitDebugUtilsMessageEXT(vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning,
     //    vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral, vk::DebugUtilsMessengerCallbackDataEXT{ .pMessage = physicalDevice.getProperties().deviceName });
     createLogicalDevice();
-    createSwapChain(); /*7th and counting, MAN OH MAN*/
+    createSwapChain(); /*8th and counting, MAN OH MAN*/
+    createImageView(); /*an image view simply describes how to access the image, and which part to access*/
     mainLoop();
     cleanup();
 }
@@ -266,11 +275,53 @@ void HelloTriangleApplication::cleanup() {
 /*8th*/
 void HelloTriangleApplication::createSwapChain() {
     auto surfaceCapabilities{ physicalDevice.getSurfaceCapabilitiesKHR(*surface) };
+    swapChainSurfaceFormat = chooseSwapSurfaceFormat(physicalDevice.getSurfaceFormatsKHR(*surface));
+    swapChainExtent = chooseSwapExtent(surfaceCapabilities, window);
 
+    auto minImageCount{std::max(3u, surfaceCapabilities.minImageCount)}; /*Minimum 3 for triple buffering*/
+    minImageCount = (surfaceCapabilities.maxImageCount > 0 && minImageCount > surfaceCapabilities.maxImageCount) ? surfaceCapabilities.maxImageCount : minImageCount; /*maxImageCount can be 0 indicating unlimited*/
 
-    //std::vector<vk::SurfaceFormatKHR> availableFormats{ physicalDevice.getSurfaceCapabilitiesKHR(*surface) };
+    /*Create Props struct and swapchain here....*/
+    vk::SwapchainCreateInfoKHR swapChainCreateInfo{
+        .flags = vk::SwapchainCreateFlagBitsKHR(),
+        .surface = *surface,
+        .minImageCount = minImageCount,
+        .imageFormat = swapChainSurfaceFormat.format,
+        .imageExtent = swapChainExtent,
+        .imageArrayLayers = 1,
+        .imageUsage = vk::ImageUsageFlagBits::eColorAttachment,
+        .imageSharingMode = vk::SharingMode::eExclusive, /*Keep in mind this relates to queue families, if you have both the present and graphics family together, just use eExclusive for now*/
+        .preTransform = surfaceCapabilities.currentTransform,
+        .compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque,
+        .presentMode = chooseSwapPresentMode(physicalDevice.getSurfacePresentModesKHR(*surface)),
+        .clipped = true,
+        .oldSwapchain = nullptr
+    };
 
-    //std::vector<vk::PresentModeKHR> availablePresentModes{ physicalDevice.getSurfacePresentModesKHR(*surface) };
+    swapChain = vk::raii::SwapchainKHR(device, swapChainCreateInfo);
+    swapChainImages = swapChain.getImages(); /*3 In this case*/
+
+    std::cout << "Swapchain images: " << swapChainImages.size() << "\n";
+    std::cout << "Format: " << vk::to_string(swapChainSurfaceFormat.format) << "\n";
+    std::cout << "Extent: " << swapChainExtent.width << "x" << swapChainExtent.height << "\n";
+
+}
+
+/*9th*/
+void HelloTriangleApplication::createImageView() {
+
+    swapChainImages.clear();
+
+    vk::ImageViewCreateInfo imageViewCreateInfo{
+        .viewType = vk::ImageViewType::e2D,
+        .format = swpChainImageFormat,
+        .subresourceRange = { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }
+    };
+
+    for (auto &image : swapChainImages) {
+        imageViewCreateInfo.image = image;
+        swapChainImageViews.emplace_back(device, imageViewCreateInfo);
+    }
 }
 
 namespace {
@@ -278,11 +329,36 @@ namespace {
     vk::SurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats) {
 
         for (vk::SurfaceFormatKHR const& availableFormat : availableFormats) {
-            if (availableFormat.format == vk::Format::eB8G8R8A8Srgb && availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
+            if (availableFormat.format == vk::Format::eB8G8R8A8Srgb /*actual format in memory*/ && availableFormat.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear /*Interpreter*/) {
                 return availableFormat;
             }
         }
 
         return availableFormats[0];
+    }
+
+    /*e.g basically the conditions to present the pixels to the surface VK_PRESENT_MODE_MAILBOX_KHR: This is another variation of the second mode. Instead of blocking the application when the queue is full, the images that are already queued are simply replaced with the newer ones*/
+    vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR> &availPresentModes) {
+
+        for (vk::PresentModeKHR const &present : availPresentModes) {
+            if (present == vk::PresentModeKHR::eMailbox) return present;
+        }
+        return vk::PresentModeKHR::eFifo;
+    }
+
+    vk::Extent2D chooseSwapExtent(vk::SurfaceCapabilitiesKHR const &capabilities, GLFWwindow* window) {
+
+        /*Just go along with vulkan's default if condition is met (currentExtent hits the max)*/
+        if (capabilities.currentExtent.width != (std::numeric_limits<uint32_t>::max)() /*Weird, getting shadowed by another max macro*/) {
+            return capabilities.currentExtent;
+        } 
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+
+        /*Just choose the resolution of the window, taking into account the surface's extents*/
+        return vk::Extent2D{
+            std::clamp<uint32_t>(width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width),
+            std::clamp<uint32_t>(height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height)
+        };
     }
 }
