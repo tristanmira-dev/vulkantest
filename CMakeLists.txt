@@ -10,6 +10,9 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_HOME_DIRECTORY}/cmake/modules")
 find_package (Vulkan REQUIRED)
 find_package (glfw3 REQUIRED)
 
+
+include(${CMAKE_SOURCE_DIR}/cmake/utils/compileShader.cmake)
+
 # # set up Vulkan C++ module (enabled when ENABLE_CPP20_MODULE=ON)
 # add_library(VulkanCppModule)
 # add_library(Vulkan::cppm ALIAS VulkanCppModule)
@@ -35,15 +38,29 @@ find_package (glfw3 REQUIRED)
 # )
 
 
-add_subdirectory(utils)
+# Your shader source files
+set(SHADER_SLANG_SOURCES ${CMAKE_SOURCE_DIR}/shaders/vertAndFrag.slang)
 
+
+add_subdirectory(utils)
+add_subdirectory(io)
+
+
+add_slang_shader_target(mainShaders SOURCES ${SHADER_SLANG_SOURCES})
 
 add_executable(mainStuff main.cpp)
+add_dependencies(mainStuff mainShaders)
+
+#CPP 20 feature
 target_compile_definitions(mainStuff PRIVATE VULKAN_HPP_NO_STRUCT_CONSTRUCTORS)
 
+#Headers for root
 target_include_directories(mainStuff PRIVATE include)
-target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp)
+
+#EXTRA SOURCES
+target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp graphicspipeline.cpp commandpool.cpp)
 
 target_link_libraries(mainStuff PRIVATE Vulkan::Vulkan)
 target_link_libraries(mainStuff PRIVATE glfw)
 target_link_libraries(mainStuff PRIVATE utils)
+target_link_libraries(mainStuff PRIVATE io)

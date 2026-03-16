@@ -41,6 +41,8 @@ void HelloTriangleApplication::run() {
     createLogicalDevice();
     createSwapChain(); /*8th and counting, MAN OH MAN*/
     createImageView(); /*an image view simply describes how to access the image, and which part to access*/
+    createGraphicsPipeline();
+    createCommandPool();
     mainLoop();
     cleanup();
 }
@@ -159,22 +161,34 @@ void HelloTriangleApplication::createLogicalDevice() {
         throw std::runtime_error{ "No appropriate graphics or surface compatible queue found" };
     }
 
-    auto features{ physicalDevice.getFeatures2() };
-    vk::PhysicalDeviceVulkan13Features vulkan13Features;
-    vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT extendedDynamicStateFeatures;
-    vulkan13Features.dynamicRendering = vk::True; /*skip boilerplate rendering setup*/
-    extendedDynamicStateFeatures.extendedDynamicState = vk::True; /*Change pipeline settings without recreating*/
-    vulkan13Features.pNext = &extendedDynamicStateFeatures;
-    features.pNext = &vulkan13Features;
+
+    vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan11Features, vk::PhysicalDeviceVulkan13Features, vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT> featureChain{
+        {},
+        {.shaderDrawParameters = true},
+        {.dynamicRendering = true},
+        {.extendedDynamicState = true}
+    };
+
+    /*More verbose way to chain pNext, more CANCEROUS way dare i say...*/
+    //auto features{ physicalDevice.getFeatures2() };
+    //vk::PhysicalDeviceVulkan13Features vulkan13Features;
+    //vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT extendedDynamicStateFeatures;
+    //vulkan13Features.dynamicRendering = vk::True; /*skip boilerplate rendering setup*/
+    //extendedDynamicStateFeatures.extendedDynamicState = vk::True; /*Change pipeline settings without recreating*/
+    //vulkan13Features.pNext = &extendedDynamicStateFeatures;
+    //features.pNext = &vulkan13Features;
+
+    //vk::PhysicalDeviceVulkan11Features vulkan11Features;
+    //vulkan11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+
 
     /*Create the device*/
     float queuePrio{ 0.5f };
     /*->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>IMPORTANT*/
     vk::DeviceQueueCreateInfo queueCreateInfo{ .queueFamilyIndex = graphicsIdx /*come back to this later, cuz what if we have two different indexes for present and graphics*/, .queueCount = 1, .pQueuePriorities = &queuePrio};
-    vk::DeviceCreateInfo deviceCreateInfo{ .pNext = &features, .queueCreateInfoCount = 1, .pQueueCreateInfos = &queueCreateInfo };
+    vk::DeviceCreateInfo deviceCreateInfo{ .pNext = &featureChain.get<vk::PhysicalDeviceFeatures2>(), .queueCreateInfoCount = 1, .pQueueCreateInfos = &queueCreateInfo, .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()), .ppEnabledExtensionNames = deviceExtensions.data() };
 
-    deviceCreateInfo.enabledExtensionCount = deviceExtensions.size();
-    deviceCreateInfo.ppEnabledExtensionNames = deviceExtensions.data();
+    queueIdx = graphicsIdx; /*COME BACK TO THIS, REALLY IMPORTANT*/
 
     device = vk::raii::Device(physicalDevice, deviceCreateInfo);
     graphicsQueue = vk::raii::Queue(device, graphicsIdx, 0);
@@ -299,22 +313,21 @@ void HelloTriangleApplication::createSwapChain() {
     };
 
     swapChain = vk::raii::SwapchainKHR(device, swapChainCreateInfo);
-    swapChainImages = swapChain.getImages(); /*3 In this case*/
+    swapChainImages = swapChain.getImages(); /*3 images In this case*/
 
     std::cout << "Swapchain images: " << swapChainImages.size() << "\n";
     std::cout << "Format: " << vk::to_string(swapChainSurfaceFormat.format) << "\n";
     std::cout << "Extent: " << swapChainExtent.width << "x" << swapChainExtent.height << "\n";
+    std::cout << physicalDevice.getProperties().deviceName << '\n';
 
 }
 
 /*9th*/
 void HelloTriangleApplication::createImageView() {
 
-    swapChainImages.clear();
-
     vk::ImageViewCreateInfo imageViewCreateInfo{
         .viewType = vk::ImageViewType::e2D,
-        .format = swpChainImageFormat,
+        .format = swapChainSurfaceFormat.format,
         .subresourceRange = { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }
     };
 
@@ -348,7 +361,7 @@ namespace {
 
     vk::Extent2D chooseSwapExtent(vk::SurfaceCapabilitiesKHR const &capabilities, GLFWwindow* window) {
 
-        /*Just go along with vulkan's default if condition is met (currentExtent hits the max)*/
+        /*Just go along with vulkan's default if condition is met (currentExtent hits the max), aka ur window giving you a default extent*/
         if (capabilities.currentExtent.width != (std::numeric_limits<uint32_t>::max)() /*Weird, getting shadowed by another max macro*/) {
             return capabilities.currentExtent;
         } 
