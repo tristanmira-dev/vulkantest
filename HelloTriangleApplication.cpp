@@ -42,7 +42,10 @@ void HelloTriangleApplication::run() {
     createSwapChain(); /*8th and counting, MAN OH MAN*/
     createImageView(); /*an image view simply describes how to access the image, and which part to access*/
     createGraphicsPipeline();
+    secondPipeline();
     createCommandPool();
+    createCommandBuffer();
+    createSyncObjects();
     mainLoop();
     cleanup();
 }
@@ -165,7 +168,7 @@ void HelloTriangleApplication::createLogicalDevice() {
     vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan11Features, vk::PhysicalDeviceVulkan13Features, vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT> featureChain{
         {},
         {.shaderDrawParameters = true},
-        {.dynamicRendering = true},
+        {.synchronization2 = true, .dynamicRendering = true},
         {.extendedDynamicState = true}
     };
 
@@ -278,7 +281,10 @@ void HelloTriangleApplication::initWindow() {
 void HelloTriangleApplication::mainLoop() {
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+        drawFrame();
     }
+
+    device.waitIdle();
 }
 
 void HelloTriangleApplication::cleanup() {

@@ -39,7 +39,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/utils/compileShader.cmake)
 
 
 # Your shader source files
-set(SHADER_SLANG_SOURCES ${CMAKE_SOURCE_DIR}/shaders/vertAndFrag.slang)
+set(SHADER_SLANG_SOURCES ${CMAKE_SOURCE_DIR}/shaders/vertAndFrag2.slang)
 
 
 add_subdirectory(utils)
@@ -58,7 +58,7 @@ target_compile_definitions(mainStuff PRIVATE VULKAN_HPP_NO_STRUCT_CONSTRUCTORS)
 target_include_directories(mainStuff PRIVATE include)
 
 #EXTRA SOURCES
-target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp graphicspipeline.cpp commandpool.cpp)
+target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp graphicspipeline.cpp commandpool.cpp draw.cpp)
 
 target_link_libraries(mainStuff PRIVATE Vulkan::Vulkan)
 target_link_libraries(mainStuff PRIVATE glfw)

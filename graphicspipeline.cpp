@@ -3,13 +3,47 @@
 #include <iostream>
 #include <vulkan/vulkan_raii.hpp>
 
+
 vk::raii::ShaderModule HelloTriangleApplication::createShaderModule(std::vector<char> const &shader) const {
 	vk::ShaderModuleCreateInfo createInfo{ .codeSize = shader.size() * sizeof(char), .pCode = reinterpret_cast<const uint32_t*>(shader.data()) };
 	return vk::raii::ShaderModule { device, createInfo };
 }
 
+glm::mat4 projection(GLFWwindow*& window) {
+	int width, height;
+	glfwGetWindowSize(window, &width, &height);
+
+	float aspect{ static_cast<float>(width) / height };
+
+	float fov{ 45.f };
+
+	float tan{ glm::tan(glm::radians(fov / 2.f)) };
+
+	float n{ 0.1f };
+	float f{ 100.f };
+
+	glm::mat4 projectionMtx{ glm::identity<glm::mat4>() };
+
+	projectionMtx[0][0] = 1 / (aspect * tan);
+
+	projectionMtx[1][1] = -1 / tan;
+
+	projectionMtx[2][2] = f / (f - n);
+
+	projectionMtx[2][3] = (-n * f) / (f - n);
+
+	projectionMtx[3][2] = 1.f;
+
+	projectionMtx[3][3] = 0.f;
+
+	return glm::transpose(projectionMtx);
+}
+
 
 void HelloTriangleApplication::createGraphicsPipeline() {
+
+	proj = projection(window);
+
 
 	/*SHADERS---------------------*/
 	vk::raii::ShaderModule shaderModule{createShaderModule(readFile(std::string{"../shaders/slang.spv"}))}; /*note, probably need to find a better way to represent these dirs via cmake*/
@@ -51,7 +85,7 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 
 	/*Rasterizer*/
 	vk::PipelineRasterizationStateCreateInfo rasterizer{ .depthClampEnable = vk::False, .rasterizerDiscardEnable = vk::False, .polygonMode = vk::PolygonMode::eFill, .cullMode = vk::CullModeFlagBits::eBack,
-		.frontFace = vk::FrontFace::eClockwise, .depthBiasEnable = vk::False, .depthBiasSlopeFactor = 1.f, .lineWidth = 1.f
+		.frontFace = vk::FrontFace::eCounterClockwise, .depthBiasEnable = vk::False, .depthBiasSlopeFactor = 1.f, .lineWidth = 1.f
 	};
 
 	/*Multisampling*/
@@ -66,9 +100,16 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{.blendEnable = vk::False, .colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA };
 	vk::PipelineColorBlendStateCreateInfo colorBlending{ .logicOpEnable = vk::False, .logicOp = vk::LogicOp::eCopy, .attachmentCount = 1, .pAttachments = &colorBlendAttachment };
 
+	/*Push Constants*/
+	vk::PushConstantRange pushConstantRange{
+		.stageFlags = vk::ShaderStageFlagBits::eVertex,
+		.offset = 0,
+		.size = sizeof(proj)
+	};
+
 
 	/*Pipeline Layout*/
-	vk::PipelineLayoutCreateInfo layoutCreateInfo{ .setLayoutCount = 0, .pushConstantRangeCount = 0 }; /*"my shaders don't use any uniforms or push constants right now."*/
+	vk::PipelineLayoutCreateInfo layoutCreateInfo{ .setLayoutCount = 0, .pushConstantRangeCount = 1, .pPushConstantRanges = &pushConstantRange }; /*"my shaders don't use any uniforms or push constants right now."*/
 	pipelineLayout = vk::raii::PipelineLayout(device, layoutCreateInfo);
 
 	/*Rendering, Pipeline creation*/
@@ -104,4 +145,70 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 	std::cout << "Pipeline created\n";
 
 
+}
+
+void HelloTriangleApplication::secondPipeline() {
+	/*Shaders*/
+	vk::raii::ShaderModule shader{ createShaderModule(readFile("../shaders/slang2.spv")) };
+	vk::PipelineShaderStageCreateInfo vertShader{ .stage = vk::ShaderStageFlagBits::eVertex, .module = shader, .pName = "vertsMain"};
+	vk::PipelineShaderStageCreateInfo fragShader{ .stage = vk::ShaderStageFlagBits::eFragment, .module = shader, .pName = "fragsMain" };
+
+	std::vector<vk::PipelineShaderStageCreateInfo> shadersInfo = { vertShader, fragShader };
+
+	/*Dynamic States*/
+	std::vector<vk::DynamicState> dynStates{ vk::DynamicState::eViewport, vk::DynamicState::eScissor };
+	vk::PipelineDynamicStateCreateInfo dynStatesInfo{ .dynamicStateCount = 2, .pDynamicStates = dynStates.data() };
+
+	/*Vertex Input*/
+	vk::PipelineVertexInputStateCreateInfo vertInfo{};
+	vk::PipelineInputAssemblyStateCreateInfo vertAssemblyInfo{ .topology = vk::PrimitiveTopology::eTriangleList };
+
+	/*Viewport*/
+	vk::PipelineViewportStateCreateInfo viewportInfo{ .viewportCount = 1, .scissorCount = 1 };
+
+	/*Rasterization*/
+	vk::PipelineRasterizationStateCreateInfo rasterizeInfo{.depthClampEnable = vk::False, .rasterizerDiscardEnable = vk::False, .polygonMode = vk::PolygonMode::eFill, .cullMode = vk::CullModeFlagBits::eBack, .frontFace = vk::FrontFace::eCounterClockwise, .lineWidth = 1.f };
+
+	/*MultiSampling (anti-aliasing) */
+	vk::PipelineMultisampleStateCreateInfo multiSampleInfo{ .rasterizationSamples = vk::SampleCountFlagBits::e1, .sampleShadingEnable = vk::False };
+
+	/*depth and stencil test*/
+	/*NONE FOR NOW*/
+
+	/*color blending*/
+	vk::PipelineColorBlendAttachmentState blendState{ .blendEnable = vk::False, .colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA };
+	vk::PipelineColorBlendStateCreateInfo blendInfo{ .logicOpEnable = vk::False, .logicOp = vk::LogicOp::eCopy, .attachmentCount = 1, .pAttachments = &blendState };
+
+	/*PushConstants here*/
+	vk::PushConstantRange range{
+		.stageFlags = vk::ShaderStageFlagBits::eVertex,
+		.offset = 0,
+		.size = sizeof(proj)
+	};
+
+	/*pipeline layout*/
+	vk::PipelineLayoutCreateInfo layoutInfo{ .setLayoutCount = 0, .pushConstantRangeCount = 1, .pPushConstantRanges = &range };
+
+	pipelineLayout2 = vk::raii::PipelineLayout(device, layoutInfo);
+
+	vk::PipelineRenderingCreateInfo render{
+		.colorAttachmentCount = 1,
+		.pColorAttachmentFormats = &swapChainSurfaceFormat.format
+	};
+
+
+	/*pipeline creation*/
+
+	vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfo> chain{
+		{.stageCount = 2, .pStages = shadersInfo.data(), .pVertexInputState = &vertInfo,
+		.pInputAssemblyState = &vertAssemblyInfo, .pViewportState = &viewportInfo, .pRasterizationState = &rasterizeInfo,
+		.pMultisampleState = &multiSampleInfo, .pColorBlendState = &blendInfo, .pDynamicState = &dynStatesInfo, .layout = pipelineLayout2, .renderPass = nullptr } ,
+		{
+		.colorAttachmentCount = 1, /*The sample renders a scene with a render-pass using one color attachment, which is a swapchain image used for presentation.*/
+		.pColorAttachmentFormats = &swapChainSurfaceFormat.format 
+		}
+	};
+
+	pipeline2 = vk::raii::Pipeline (device, nullptr, chain.get<vk::GraphicsPipelineCreateInfo>());
+	
 }

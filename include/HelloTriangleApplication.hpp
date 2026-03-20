@@ -6,6 +6,10 @@
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan_raii.hpp>
 
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 class HelloTriangleApplication {
 public:
     void run();
@@ -20,6 +24,9 @@ private:
         vk::KHRSwapchainExtensionName /*extension of the gpu for presenting to the monitor*/
     };
 
+    glm::mat4x4 proj;
+
+    static constexpr int MAX_FRAMES_IN_FLIGHT{ 2 };
     
 
     GLFWwindow* window{ nullptr };
@@ -49,11 +56,24 @@ private:
     /*Pipeline*/
     vk::raii::PipelineLayout pipelineLayout{ nullptr };
     vk::raii::Pipeline pipeline{ nullptr };
+    /*Second Pipeline*/
+    vk::raii::PipelineLayout pipelineLayout2{ nullptr };
+    vk::raii::Pipeline pipeline2{ nullptr };
 
     /*Command buffer object*/
     vk::raii::CommandPool commandPool{ nullptr };
-    vk::raii::CommandBuffer commandBuffer{ nullptr };
+    std::vector<vk::raii::CommandBuffer> commandBuffers;
 
+    /*Frames in flight*/
+    uint32_t frameIdx{};
+
+    /*Synchronization objects*/
+    /*Semaphores for now are mainly for swapchain operations, and Fences are mainly for drawing frames (do not want to override the command buffers before the previous drawFrame calls while the gpu is still processing it)*/
+    std::vector<vk::raii::Semaphore> presentCompleteSemaphore;
+    std::vector<vk::raii::Semaphore> renderFinishedSemaphore;
+    std::vector<vk::raii::Fence> inFlightFences;
+
+    std::vector<vk::raii::Semaphore> secondPipelineSemaphore;
     void createInstance();
     
     void initVulkan();
@@ -76,12 +96,19 @@ private:
 
     void createImageView();
 
+    void drawFrame();
+
     void createGraphicsPipeline();
+
+    void secondPipeline();
+
+    void createSyncObjects();
 
     /*Command Buffer Stuff*/
     void createCommandPool();
     void createCommandBuffer();
     void recordCommandBuffer(uint32_t imageIdx);
+    void recordCommandBuffer2(uint32_t imageIdx);
     void transition_image_layout(uint32_t imageIdx, vk::ImageLayout oldLayout, vk::ImageLayout imageLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask);
 
     /**/
