@@ -270,13 +270,50 @@ void HelloTriangleApplication::setupDebugMessenger() {
     debugMessenger = instance.createDebugUtilsMessengerEXT(debugUtilsMessengerCreateInfoEXT);
 }
 
+void HelloTriangleApplication::recreateSwapChain() {
+    
+    int width, height;
+
+    glfwGetFramebufferSize(window, &width, &height);
+
+    while (!width || !height) {
+        glfwGetFramebufferSize(window, &width, &height);
+        glfwWaitEvents(); /*
+        instead of spinning it tells the thread to **sleep and wait** until the OS sends a window event (like the user restoring the window). Only then does the thread wake up, check the size again, and either loop or exit. 
+        */
+    }
+    
+    device.waitIdle();
+
+    cleanupSwapChain();
+    createSwapChain();
+    createImageView();
+}
+
+void HelloTriangleApplication::cleanupSwapChain() {
+    swapChainImageViews.clear(); /* Destroy the imageviews first as it is a dependency of the images */
+    swapChainImages.clear();
+    swapChain = nullptr; 
+}
+
 /*1st*/
 void HelloTriangleApplication::initWindow() {
     glfwInit();
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); /*Dont create an opengl context, by default glfw was made for opengl*/
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); /*Disables resizing for now....*/
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE); /*Disables resizing for now....*/
     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+
+    glfwSetWindowUserPointer(window, this);
+
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) {
+        HelloTriangleApplication* app{ reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window)) };
+
+        app->frameBufferResized = true;
+
+    });
 }
+
+
 
 void HelloTriangleApplication::mainLoop() {
     while (!glfwWindowShouldClose(window)) {
@@ -288,6 +325,9 @@ void HelloTriangleApplication::mainLoop() {
 }
 
 void HelloTriangleApplication::cleanup() {
+
+    cleanupSwapChain();
+
     glfwDestroyWindow(window);
     glfwTerminate();
 }

@@ -27,6 +27,8 @@ private:
     glm::mat4x4 proj;
 
     static constexpr int MAX_FRAMES_IN_FLIGHT{ 2 };
+
+    bool frameBufferResized{ false };
     
 
     GLFWwindow* window{ nullptr };
@@ -73,7 +75,6 @@ private:
     std::vector<vk::raii::Semaphore> renderFinishedSemaphore;
     std::vector<vk::raii::Fence> inFlightFences;
 
-    std::vector<vk::raii::Semaphore> secondPipelineSemaphore;
     void createInstance();
     
     void initVulkan();
@@ -85,6 +86,10 @@ private:
     void createLogicalDevice();
 
     void setupDebugMessenger();
+
+    void recreateSwapChain();
+
+    void cleanupSwapChain();
 
     void initWindow();
     
@@ -108,7 +113,6 @@ private:
     void createCommandPool();
     void createCommandBuffer();
     void recordCommandBuffer(uint32_t imageIdx);
-    void recordCommandBuffer2(uint32_t imageIdx);
     void transition_image_layout(uint32_t imageIdx, vk::ImageLayout oldLayout, vk::ImageLayout imageLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask);
 
     /**/

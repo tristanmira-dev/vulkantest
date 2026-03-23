@@ -51,8 +51,9 @@ add_slang_shader_target(mainShaders SOURCES ${SHADER_SLANG_SOURCES})
 add_executable(mainStuff main.cpp)
 add_dependencies(mainStuff mainShaders)
 
-#CPP 20 feature
-target_compile_definitions(mainStuff PRIVATE VULKAN_HPP_NO_STRUCT_CONSTRUCTORS)
+
+target_compile_definitions(mainStuff PRIVATE VULKAN_HPP_NO_STRUCT_CONSTRUCTORS) #CPP 20 feature
+target_compile_definitions(mainStuff PRIVATE VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS)
 
 #Headers for root
 target_include_directories(mainStuff PRIVATE include)

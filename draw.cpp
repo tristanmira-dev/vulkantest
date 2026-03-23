@@ -18,25 +18,39 @@ Present the swap chain image
 void HelloTriangleApplication::drawFrame() {
 
 
-	device.waitForFences(*inFlightFences[frameIdx], vk::True, UINT32_MAX);
-	device.resetFences(*inFlightFences[frameIdx]);
+	auto fenceRes{ device.waitForFences(*inFlightFences[frameIdx], vk::True, UINT32_MAX) };
+
+	if (fenceRes != vk::Result::eSuccess) {
+		throw std::runtime_error("Failed to wait for fence!");
+	}
 
 	auto [result, imageIndex] = swapChain.acquireNextImage(UINT32_MAX, *presentCompleteSemaphore[frameIdx] /*Using this as a signal*/, nullptr);
 
+	if (result == vk::Result::eErrorOutOfDateKHR /* Usually happens after a window resize. */ ) {
+		recreateSwapChain(); 
+		return;
+	} if (result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR) {
+		throw("Failed to get swapchain image!");
+	}
+
 	commandBuffers[frameIdx].reset();
-	recordCommandBuffer2(imageIndex);
+
+	device.resetFences(*inFlightFences[frameIdx]);
+
+	recordCommandBuffer(imageIndex);
 
 	vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput); /*only blocks when the gpu needs to write pixels to the image*/
 	const vk::SubmitInfo submitInfo{ .waitSemaphoreCount = 1, .pWaitSemaphores = &*presentCompleteSemaphore[frameIdx], .pWaitDstStageMask = &waitDestinationStageMask, .commandBufferCount = 1, .pCommandBuffers = &*commandBuffers[frameIdx], .signalSemaphoreCount = 1, .pSignalSemaphores = &*renderFinishedSemaphore[imageIndex]};
 	graphicsQueue.submit(submitInfo, *inFlightFences[frameIdx]);
-	if (result != vk::Result::eSuccess) {
-		throw std::runtime_error("failed to wait for fence!");
-	}
-
 
 
 	const vk::PresentInfoKHR presentInfoKHR{ .waitSemaphoreCount = 1, .pWaitSemaphores = &*renderFinishedSemaphore[imageIndex], .swapchainCount = 1, .pSwapchains = &*swapChain, .pImageIndices = &imageIndex};
 	result = graphicsQueue.presentKHR(presentInfoKHR);
+	if (result == vk::Result::eErrorOutOfDateKHR || result == vk::Result::eSuboptimalKHR || frameBufferResized) {
+		frameBufferResized = false;
+		recreateSwapChain();
+	}
+
 	
 	frameIdx = (frameIdx + 1) % MAX_FRAMES_IN_FLIGHT;
 	

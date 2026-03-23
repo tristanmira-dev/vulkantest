@@ -62,7 +62,7 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 
-	commandBuffer.setViewport(0, vk::Viewport(0.f, 0.f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.f, 1.f));
+	commandBuffer.setViewport(0, vk::Viewport(0.f, 0.f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.f, 0.f));
 	commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), swapChainExtent));
 
 
@@ -71,97 +71,16 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 	commandBuffer.draw(36, 1, 0, 0);
 
 
-	commandBuffer.endRendering();
-
-	/*
-	
-		UNDEFINED → COLOR_ATTACHMENT_OPTIMAL
-
-		"I don't care what state this image was in, just make it ready for drawing"
-		Happens before beginRendering
-		COLOR_ATTACHMENT_OPTIMAL (during rendering)
-
-		GPU is actively writing pixels to it — your triangle gets drawn here
-		COLOR_ATTACHMENT_OPTIMAL → PRESENT_SRC_KHR
-
-		"Done drawing, rearrange it for showing on screen"
-		Happens after endRendering
-		PRESENT_SRC_KHR (presenting)
-
-		Image gets sent to the display
-	
-	*/
-
-	transition_image_layout(imageIdx, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR, vk::AccessFlagBits2::eColorAttachmentWrite, {}, vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eBottomOfPipe);
-
-	commandBuffer.end();
-}
-
-
-
-void HelloTriangleApplication::recordCommandBuffer2(uint32_t imageIdx) {
-
-	auto &commandBuffer{commandBuffers[frameIdx]};
-
-	commandBuffer.begin({});
-
-	/*
-	imageIndex — which swapchain image you're transitioning
-	eUndefined — old layout. "I don't care what it was before, throw away the contents"
-	eColorAttachmentOptimal — new layout. "Rearrange it for drawing to"
-	{} (srcAccessMask) — no access to wait on. Nothing was using this image before
-	eColorAttachmentWrite — the next thing doing is writing color to it
-	eColorAttachmentOutput (srcStage) — wait for the color output stage to be free
-	eColorAttachmentOutput (dstStage) — the stage that will use it next is also color output
-	*/
-	transition_image_layout(imageIdx, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, {}, vk::AccessFlagBits2::eColorAttachmentWrite, vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eColorAttachmentOutput);
-
-
-
-	/*imageView — which swapchain image view to render to
-	imageLayout — the layout it's in (you just transitioned it to COLOR_ATTACHMENT_OPTIMAL)
-	loadOp — what to do before rendering. Clear = wipe it to black first
-	storeOp — what to do after rendering. Store = keep the pixels (you need them for presenting)
-	clearValue — the black color (RGBA 0,0,0,1)*/
-	vk::RenderingAttachmentInfo attachmentInfo{
-		.imageView = swapChainImageViews[imageIdx],
-		.imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
-		.loadOp = vk::AttachmentLoadOp::eClear,
-		.storeOp = vk::AttachmentStoreOp::eStore,
-		//.clearValue = clearColor
-	};
-
-	/*"color attachment" = the image where your pixel colors end up. Your swapchain image is the color attachment.*/
-
-	/*renderArea — draw over the whole swapchain (starting at 0,0, full extent)
-	layerCount — 1, you're not doing stereoscopic/VR stuff
-	colorAttachmentCount + pColorAttachments — points to that attachment info above*/
-	vk::RenderingInfo renderingInfo{
-		.renderArea = {.offset = {0, 0}, .extent = swapChainExtent},
-		.layerCount = 1,
-		.colorAttachmentCount = 1,
-		.pColorAttachments = &attachmentInfo
-	};
-
-	commandBuffer.beginRendering(renderingInfo);
 
 	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline2);
+	commandBuffer.setViewport(0, vk::Viewport(0.f, 0.f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.f, 0.f));
+	commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D{ 0, 0 }, swapChainExtent));
 
-	commandBuffer.pushConstants<glm::mat4>(pipelineLayout2, vk::ShaderStageFlagBits::eVertex, 0, proj);
 
-	commandBuffer.setViewport(0, vk::Viewport(0.f, 0.f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.f, 1.f));
-	commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), swapChainExtent));
-
+	commandBuffer.pushConstants<glm::mat4>(*pipelineLayout2, vk::ShaderStageFlagBits::eVertex, 0, proj);
 	commandBuffer.draw(36, 1, 0, 0);
 
-	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
 
-	commandBuffer.pushConstants<glm::mat4>(pipelineLayout2, vk::ShaderStageFlagBits::eVertex, 0, proj);
-
-	commandBuffer.setViewport(0, vk::Viewport(0.f, 0.f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.f, 1.f));
-	commandBuffer.setScissor(0, vk::Rect2D{ .offset = vk::Offset2D(0, 0), .extent = swapChainExtent});
-
-	commandBuffer.draw(36, 1, 0, 0);
 
 	commandBuffer.endRendering();
 
