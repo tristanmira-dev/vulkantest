@@ -7,7 +7,7 @@ void HelloTriangleApplication::createCommandPool() {
 
 void HelloTriangleApplication::createCommandBuffer() {
 	commandBuffers.clear();
-	vk::CommandBufferAllocateInfo allocInfo{ .commandPool = commandPool, .level = vk::CommandBufferLevel::ePrimary, .commandBufferCount = MAX_FRAMES_IN_FLIGHT };
+	vk::CommandBufferAllocateInfo allocInfo{ .commandPool = commandPool, .level = vk::CommandBufferLevel::ePrimary, .commandBufferCount = MAX_FRAMES_IN_FLIGHT * 2 };
 	
 	commandBuffers = vk::raii::CommandBuffers(device, allocInfo);
 
@@ -45,6 +45,8 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 		.storeOp = vk::AttachmentStoreOp::eStore,
 		.clearValue = clearColor
 	};
+
+	
 
 	/*"color attachment" = the image where your pixel colors end up. Your swapchain image is the color attachment.*/
 
@@ -92,8 +94,6 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 	
 	*/
 
-	transition_image_layout(imageIdx, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR, vk::AccessFlagBits2::eColorAttachmentWrite, {}, vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eBottomOfPipe);
-
 	commandBuffer.end();
 }
 
@@ -101,21 +101,9 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 
 void HelloTriangleApplication::recordCommandBuffer2(uint32_t imageIdx) {
 
-	auto &commandBuffer{commandBuffers[frameIdx]};
+	auto &commandBuffer{commandBuffers[frameIdx+2]};
 
 	commandBuffer.begin({});
-
-	/*
-	imageIndex — which swapchain image you're transitioning
-	eUndefined — old layout. "I don't care what it was before, throw away the contents"
-	eColorAttachmentOptimal — new layout. "Rearrange it for drawing to"
-	{} (srcAccessMask) — no access to wait on. Nothing was using this image before
-	eColorAttachmentWrite — the next thing doing is writing color to it
-	eColorAttachmentOutput (srcStage) — wait for the color output stage to be free
-	eColorAttachmentOutput (dstStage) — the stage that will use it next is also color output
-	*/
-	transition_image_layout(imageIdx, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, {}, vk::AccessFlagBits2::eColorAttachmentWrite, vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eColorAttachmentOutput);
-
 
 
 	/*imageView — which swapchain image view to render to
@@ -126,9 +114,8 @@ void HelloTriangleApplication::recordCommandBuffer2(uint32_t imageIdx) {
 	vk::RenderingAttachmentInfo attachmentInfo{
 		.imageView = swapChainImageViews[imageIdx],
 		.imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
-		.loadOp = vk::AttachmentLoadOp::eClear,
+		.loadOp = vk::AttachmentLoadOp::eLoad,
 		.storeOp = vk::AttachmentStoreOp::eStore,
-		//.clearValue = clearColor
 	};
 
 	/*"color attachment" = the image where your pixel colors end up. Your swapchain image is the color attachment.*/
@@ -154,15 +141,6 @@ void HelloTriangleApplication::recordCommandBuffer2(uint32_t imageIdx) {
 
 	commandBuffer.draw(36, 1, 0, 0);
 
-	commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline);
-
-	commandBuffer.pushConstants<glm::mat4>(pipelineLayout2, vk::ShaderStageFlagBits::eVertex, 0, proj);
-
-	commandBuffer.setViewport(0, vk::Viewport(0.f, 0.f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.f, 1.f));
-	commandBuffer.setScissor(0, vk::Rect2D{ .offset = vk::Offset2D(0, 0), .extent = swapChainExtent});
-
-	commandBuffer.draw(36, 1, 0, 0);
-
 	commandBuffer.endRendering();
 
 	/*
@@ -184,7 +162,7 @@ void HelloTriangleApplication::recordCommandBuffer2(uint32_t imageIdx) {
 	
 	*/
 
-	transition_image_layout(imageIdx, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR, vk::AccessFlagBits2::eColorAttachmentWrite, {}, vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eBottomOfPipe);
+	transition_image_layout(imageIdx, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR, vk::AccessFlagBits2::eColorAttachmentWrite, {}, vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eBottomOfPipe, 2);
 
 	commandBuffer.end();
 }
@@ -200,13 +178,10 @@ oldLayout — current image layout
 newLayout — layout you want it to transition to
 srcQueueFamilyIndex / dstQueueFamilyIndex — for transferring image ownership between queue families (e.g. graphics → compute). IGNORED means "same queue, don't care"
 image — which image you're transitioning
-subresourceRange — which part of the image:
-aspectMask — color data (not depth/stencil)
-baseMipLevel / levelCount — which mip levels (you have 1, starting at 0)
-baseArrayLayer / layerCount — which array layers (you have 1, starting at 0). Array layers are for things like cubemaps which have 6 faces in one image
+
 
 */
-void HelloTriangleApplication::transition_image_layout(uint32_t imageIdx, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask) {
+void HelloTriangleApplication::transition_image_layout(uint32_t imageIdx, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask, int offset) {
 	vk::ImageMemoryBarrier2 imageTransitionAndWait{
 		.srcStageMask = srcStageMask,
 		.srcAccessMask = srcAccessMask,
@@ -224,6 +199,13 @@ void HelloTriangleApplication::transition_image_layout(uint32_t imageIdx, vk::Im
 			.baseArrayLayer = 0,
 			.layerCount = 1
 		}
+
+		/*
+			subresourceRange — which part of the image:
+			aspectMask — color data (not depth/stencil)
+			baseMipLevel / levelCount — which mip levels (you have 1, starting at 0)
+			baseArrayLayer / layerCount — which array layers (you have 1, starting at 0). Array layers are for things like cubemaps which have 6 faces in one image
+		*/
 	};
 
 
@@ -233,5 +215,5 @@ void HelloTriangleApplication::transition_image_layout(uint32_t imageIdx, vk::Im
 		.pImageMemoryBarriers = &imageTransitionAndWait /* "everything before this barrier must finish before anything after it can start.", The layout transition is the barrier. It's the wall itself. */
 	};
 
-	commandBuffers[frameIdx].pipelineBarrier2(dependencyInfo);
+	commandBuffers[frameIdx + offset].pipelineBarrier2(dependencyInfo);
 }

@@ -17,6 +17,8 @@ Present the swap chain image
 */
 void HelloTriangleApplication::drawFrame() {
 
+	int secondBufferFrameIdx = frameIdx + 2;
+
 
 	device.waitForFences(*inFlightFences[frameIdx], vk::True, UINT32_MAX);
 	device.resetFences(*inFlightFences[frameIdx]);
@@ -24,11 +26,17 @@ void HelloTriangleApplication::drawFrame() {
 	auto [result, imageIndex] = swapChain.acquireNextImage(UINT32_MAX, *presentCompleteSemaphore[frameIdx] /*Using this as a signal*/, nullptr);
 
 	commandBuffers[frameIdx].reset();
-	recordCommandBuffer2(imageIndex);
+	recordCommandBuffer(imageIndex);
 
 	vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput); /*only blocks when the gpu needs to write pixels to the image*/
-	const vk::SubmitInfo submitInfo{ .waitSemaphoreCount = 1, .pWaitSemaphores = &*presentCompleteSemaphore[frameIdx], .pWaitDstStageMask = &waitDestinationStageMask, .commandBufferCount = 1, .pCommandBuffers = &*commandBuffers[frameIdx], .signalSemaphoreCount = 1, .pSignalSemaphores = &*renderFinishedSemaphore[imageIndex]};
-	graphicsQueue.submit(submitInfo, *inFlightFences[frameIdx]);
+	const vk::SubmitInfo submitInfo{ .waitSemaphoreCount = 1, .pWaitSemaphores = &*presentCompleteSemaphore[frameIdx], .pWaitDstStageMask = &waitDestinationStageMask, .commandBufferCount = 1, .pCommandBuffers = &*commandBuffers[frameIdx], .signalSemaphoreCount = 1, .pSignalSemaphores = &*presentCompleteSemaphore[secondBufferFrameIdx]};
+	graphicsQueue.submit(submitInfo, nullptr);
+
+	commandBuffers[secondBufferFrameIdx].reset();
+	recordCommandBuffer2(imageIndex);
+	const vk::SubmitInfo submitInfo2{ .waitSemaphoreCount = 1, .pWaitSemaphores = &*presentCompleteSemaphore[secondBufferFrameIdx], . pWaitDstStageMask = &waitDestinationStageMask, .commandBufferCount = 1, .pCommandBuffers = &*commandBuffers[secondBufferFrameIdx], .signalSemaphoreCount = 1, .pSignalSemaphores = &*renderFinishedSemaphore[imageIndex] };
+	graphicsQueue.submit(submitInfo2, *inFlightFences[frameIdx]);
+
 	if (result != vk::Result::eSuccess) {
 		throw std::runtime_error("failed to wait for fence!");
 	}
@@ -60,7 +68,7 @@ void HelloTriangleApplication::createSyncObjects() {
 		renderFinishedSemaphore.emplace_back(vk::raii::Semaphore(device, vk::SemaphoreCreateInfo{}));
 	}
 
-	for (int i{}; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+	for (int i{}; i < MAX_FRAMES_IN_FLIGHT * 2; ++i) {
 		inFlightFences.emplace_back(vk::raii::Fence(device, vk::FenceCreateInfo{ .flags = vk::FenceCreateFlagBits::eSignaled }));
 		presentCompleteSemaphore.emplace_back(vk::raii::Semaphore(device, vk::SemaphoreCreateInfo{}));
 

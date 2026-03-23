@@ -73,7 +73,10 @@ private:
     std::vector<vk::raii::Semaphore> renderFinishedSemaphore;
     std::vector<vk::raii::Fence> inFlightFences;
 
-    std::vector<vk::raii::Semaphore> secondPipelineSemaphore;
+    std::vector<vk::raii::Semaphore> secondPipelineSemaphore2;
+    std::vector<vk::raii::Semaphore> renderFinishedSemaphore2;
+
+
     void createInstance();
     
     void initVulkan();
@@ -107,9 +110,11 @@ private:
     /*Command Buffer Stuff*/
     void createCommandPool();
     void createCommandBuffer();
+    void createCommandPool2();
+    void createCommandBuffer2();
     void recordCommandBuffer(uint32_t imageIdx);
     void recordCommandBuffer2(uint32_t imageIdx);
-    void transition_image_layout(uint32_t imageIdx, vk::ImageLayout oldLayout, vk::ImageLayout imageLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask);
+    void transition_image_layout(uint32_t imageIdx, vk::ImageLayout oldLayout, vk::ImageLayout imageLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask, int offset = 0);
 
     /**/
 

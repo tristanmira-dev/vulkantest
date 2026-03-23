@@ -55,7 +55,7 @@ struct VertexOutput {
 [shader("vertex")]
 VertexOutput vertsMain(uint vid : SV_VertexID) {
     VertexOutput output;
-    output.sv_position = mul(mtx.proj, float4(positions[vid].xy, positions[vid].z, 1.0).add(float4(-3.5, 0.0, 14.0, 0.0)));
+    output.sv_position = mul(mtx.proj, float4(positions[vid].xy, positions[vid].z, 1.0).add(float4(-4.5, 0.0, 10.0, 0.0)));
 
     output.color = colors[vid];
     return output;
