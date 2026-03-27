@@ -33,19 +33,6 @@ namespace {
 void HelloTriangleApplication::run() {
     initWindow();
     initVulkan();
-    setupDebugMessenger();
-    createSurface();
-    pickPhysicalDevice();
-    //instance.submitDebugUtilsMessageEXT(vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning,
-    //    vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral, vk::DebugUtilsMessengerCallbackDataEXT{ .pMessage = physicalDevice.getProperties().deviceName });
-    createLogicalDevice();
-    createSwapChain(); /*8th and counting, MAN OH MAN*/
-    createImageView(); /*an image view simply describes how to access the image, and which part to access*/
-    createGraphicsPipeline();
-    secondPipeline();
-    createCommandPool();
-    createCommandBuffer();
-    createSyncObjects();
     mainLoop();
     cleanup();
 }
@@ -106,6 +93,38 @@ void HelloTriangleApplication::createInstance() {
 /*2nd*/
 void HelloTriangleApplication::initVulkan() {
     createInstance();
+
+    /*
+    PLACEHOLDER FIND A BETTER SPOT FOR THESE INITS
+    */
+
+    readVertices({
+        // Left triangle
+        {{-0.75f, -0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
+        {{-0.25f,  0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
+        {{-0.75f,  0.5f, 0.f}, {0.0f, 0.0f, 1.0f}},
+
+        // Right triangle
+        {{ 0.25f, -0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
+        {{ 0.75f, -0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
+        {{ 0.75f,  0.5f, 0.f}, {0.0f, 0.0f, 1.0f}},
+    });
+
+
+    setupDebugMessenger();
+    createSurface();
+    pickPhysicalDevice();
+    //instance.submitDebugUtilsMessageEXT(vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning,
+    //    vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral, vk::DebugUtilsMessengerCallbackDataEXT{ .pMessage = physicalDevice.getProperties().deviceName });
+    createLogicalDevice();
+    createSwapChain(); /*8th and counting, MAN OH MAN*/
+    createImageView(); /*an image view simply describes how to access the image, and which part to access*/
+    createGraphicsPipeline();
+    secondPipeline();
+    createCommandPool();
+    createVertexBuffer();
+    createCommandBuffer();
+    createSyncObjects();
 }
 
 /*5th*/
@@ -316,9 +335,31 @@ void HelloTriangleApplication::initWindow() {
 
 
 void HelloTriangleApplication::mainLoop() {
+    float accumulator{};
+    float frames{};
+
     while (!glfwWindowShouldClose(window)) {
+
+        startTime = std::chrono::high_resolution_clock::now();
+
         glfwPollEvents();
         drawFrame();
+
+
+        auto endTime = std::chrono::high_resolution_clock::now() - startTime;
+
+        float delta = std::chrono::duration<float>(endTime).count();
+
+        accumulator += delta;
+        frames++;
+
+        if (accumulator > 1.f) {
+            std::cout << frames << '\n';
+            accumulator = 0.f;
+            frames = 0.f;
+        }
+
+
     }
 
     device.waitIdle();
@@ -381,6 +422,19 @@ void HelloTriangleApplication::createImageView() {
         imageViewCreateInfo.image = image;
         swapChainImageViews.emplace_back(device, imageViewCreateInfo);
     }
+}
+
+uint32_t HelloTriangleApplication::findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties) {
+    vk::PhysicalDeviceMemoryProperties memProperties{ physicalDevice.getMemoryProperties() };
+
+    for (uint32_t i{}; i < memProperties.memoryTypeCount; i++) {
+        if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+            return i;
+        }
+    }
+
+
+    throw std::runtime_error("Fresh outta luck pal, no memory types are available for u!");
 }
 
 namespace {

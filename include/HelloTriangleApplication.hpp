@@ -1,20 +1,26 @@
 #ifndef HELLOTRIANGLEAPPLICATION_HPP
 #define HELLOTRIANGLEAPPLICATION_HPP
 
-#define VK_USE_PLATFORM_WIN32_KHR
-#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan_raii.hpp>
+
+#include <chrono>
 
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <initializer_list>
+
+#include "vertex.hpp"
+
 
 class HelloTriangleApplication {
 public:
     void run();
 
 private:
+
+
 
     const std::vector<char const*> validationLayers{
         "VK_LAYER_KHRONOS_validation"
@@ -26,6 +32,8 @@ private:
 
     glm::mat4x4 proj;
 
+    std::vector<Vertex> vertices;
+
     static constexpr int MAX_FRAMES_IN_FLIGHT{ 2 };
 
     bool frameBufferResized{ false };
@@ -36,6 +44,9 @@ private:
     vk::raii::Context context;
     vk::raii::Instance instance{ nullptr };
     vk::raii::DebugUtilsMessengerEXT debugMessenger{ nullptr };
+
+    /*Timing*/
+    std::chrono::steady_clock::time_point startTime;
 
     /*Graphics card*/
     vk::raii::Device device{ nullptr }; /*Logical Device*/
@@ -75,6 +86,12 @@ private:
     std::vector<vk::raii::Semaphore> renderFinishedSemaphore;
     std::vector<vk::raii::Fence> inFlightFences;
 
+    /*Vertex Buffers*/
+    vk::raii::Buffer vertexBuffer{ nullptr };
+    vk::raii::DeviceMemory vertexBufferMemory{ nullptr };
+
+    void readVertices(std::initializer_list<Vertex> verticeValues);
+
     void createInstance();
     
     void initVulkan();
@@ -101,6 +118,8 @@ private:
 
     void createImageView();
 
+    uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
+
     void drawFrame();
 
     void createGraphicsPipeline();
@@ -115,7 +134,10 @@ private:
     void recordCommandBuffer(uint32_t imageIdx);
     void transition_image_layout(uint32_t imageIdx, vk::ImageLayout oldLayout, vk::ImageLayout imageLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask);
 
-    /**/
+    /*BUFFERS*/
+    void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags props, vk::raii::Buffer& buffer, vk::raii::DeviceMemory& bufferMemory);
+    void copyBuffer(vk::raii::Buffer& stagingBuffer, vk::raii::Buffer& vertexBuffer, vk::DeviceSize size);
+    void createVertexBuffer();
 
     vk::raii::ShaderModule createShaderModule(std::vector<char> const& shader) const;
 };

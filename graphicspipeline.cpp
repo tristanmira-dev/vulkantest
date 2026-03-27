@@ -1,8 +1,8 @@
 #include "HelloTriangleApplication.hpp"
 #include "readShaders.hpp"
+#include "vertex.hpp"
 #include <iostream>
 #include <vulkan/vulkan_raii.hpp>
-
 
 vk::raii::ShaderModule HelloTriangleApplication::createShaderModule(std::vector<char> const &shader) const {
 	vk::ShaderModuleCreateInfo createInfo{ .codeSize = shader.size() * sizeof(char), .pCode = reinterpret_cast<const uint32_t*>(shader.data()) };
@@ -54,6 +54,9 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 	vk::PipelineShaderStageCreateInfo shadersStage[] = { vertShaderStageInfo, fragShaderStageInfo };
 
 
+	
+
+
 
 	/*DYNAMIC STATES---------------*/
 	std::vector<vk::DynamicState> dynamicStates{vk::DynamicState::eViewport, vk::DynamicState::eScissor}; //This will cause the configuration of these values to be ignored, and you will be able (and required) to specify the data at drawing time
@@ -62,7 +65,17 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 
 
 	/*Vertex input----------------*/
-	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{};
+	auto bindingDescription{ Vertex::getBindingDescription() };
+	auto attributeDescription{ Vertex::getAttributeDescription() };
+	
+	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ 
+		.vertexBindingDescriptionCount = 1, 
+		.pVertexBindingDescriptions = &bindingDescription, 
+		.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescription.size()), 
+		.pVertexAttributeDescriptions = attributeDescription.data()
+	};
+
+
 
 	/*Input Assembly(Type of geometry to draw)*/
 	vk::PipelineInputAssemblyStateCreateInfo inputAssemblyInfo{ .topology = vk::PrimitiveTopology::eTriangleList };
@@ -84,7 +97,7 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 
 
 	/*Rasterizer*/
-	vk::PipelineRasterizationStateCreateInfo rasterizer{ .depthClampEnable = vk::False, .rasterizerDiscardEnable = vk::False, .polygonMode = vk::PolygonMode::eFill, .cullMode = vk::CullModeFlagBits::eBack,
+	vk::PipelineRasterizationStateCreateInfo rasterizer{ .depthClampEnable = vk::False, .rasterizerDiscardEnable = vk::False, .polygonMode = vk::PolygonMode::eFill, .cullMode = vk::CullModeFlagBits::eNone,
 		.frontFace = vk::FrontFace::eCounterClockwise, .depthBiasEnable = vk::False, .depthBiasSlopeFactor = 1.f, .lineWidth = 1.f
 	};
 
@@ -100,16 +113,9 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 	vk::PipelineColorBlendAttachmentState colorBlendAttachment{.blendEnable = vk::False, .colorWriteMask = vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA };
 	vk::PipelineColorBlendStateCreateInfo colorBlending{ .logicOpEnable = vk::False, .logicOp = vk::LogicOp::eCopy, .attachmentCount = 1, .pAttachments = &colorBlendAttachment };
 
-	/*Push Constants*/
-	vk::PushConstantRange pushConstantRange{
-		.stageFlags = vk::ShaderStageFlagBits::eVertex,
-		.offset = 0,
-		.size = sizeof(proj)
-	};
-
 
 	/*Pipeline Layout*/
-	vk::PipelineLayoutCreateInfo layoutCreateInfo{ .setLayoutCount = 0, .pushConstantRangeCount = 1, .pPushConstantRanges = &pushConstantRange }; /*"my shaders don't use any uniforms or push constants right now."*/
+	vk::PipelineLayoutCreateInfo layoutCreateInfo{ .setLayoutCount = 0, .pushConstantRangeCount = 0, .pPushConstantRanges = nullptr }; /*"my shaders don't use any uniforms or push constants right now."*/
 	pipelineLayout = vk::raii::PipelineLayout(device, layoutCreateInfo);
 
 	/*Rendering, Pipeline creation*/

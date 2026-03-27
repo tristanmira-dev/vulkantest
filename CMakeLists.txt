@@ -39,7 +39,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/utils/compileShader.cmake)
 
 
 # Your shader source files
-set(SHADER_SLANG_SOURCES ${CMAKE_SOURCE_DIR}/shaders/vertAndFrag2.slang)
+set(SHADER_SLANG_SOURCES ${CMAKE_SOURCE_DIR}/shaders/vertAndFrag.slang)
 
 
 add_subdirectory(utils)
@@ -54,12 +54,13 @@ add_dependencies(mainStuff mainShaders)
 
 target_compile_definitions(mainStuff PRIVATE VULKAN_HPP_NO_STRUCT_CONSTRUCTORS) #CPP 20 feature
 target_compile_definitions(mainStuff PRIVATE VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS)
+target_compile_definitions(mainStuff PRIVATE VK_USE_PLATFORM_WIN32_KHR GLFW_INCLUDE_VULKAN)
 
 #Headers for root
 target_include_directories(mainStuff PRIVATE include)
 
 #EXTRA SOURCES
-target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp graphicspipeline.cpp commandpool.cpp draw.cpp)
+target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp graphicspipeline.cpp commandpool.cpp draw.cpp vertex.cpp buffers.cpp)
 
 target_link_libraries(mainStuff PRIVATE Vulkan::Vulkan)
 target_link_libraries(mainStuff PRIVATE glfw)
