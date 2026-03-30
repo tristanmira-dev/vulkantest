@@ -5,8 +5,6 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include <chrono>
-
-#define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <initializer_list>
@@ -33,6 +31,7 @@ private:
     glm::mat4x4 proj;
 
     std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
 
     static constexpr int MAX_FRAMES_IN_FLIGHT{ 2 };
 
@@ -46,49 +45,48 @@ private:
     vk::raii::DebugUtilsMessengerEXT debugMessenger{ nullptr };
 
     /*Timing*/
-    std::chrono::steady_clock::time_point startTime;
+        std::chrono::steady_clock::time_point startTime;
+        float deltaTime{};
 
     /*Graphics card*/
-    vk::raii::Device device{ nullptr }; /*Logical Device*/
-    vk::raii::Queue graphicsQueue{ nullptr };
-    vk::raii::Queue presentQueue{ nullptr };
-    vk::raii::PhysicalDevice physicalDevice{ nullptr };
-    vk::raii::SurfaceKHR surface{ nullptr };
-    uint32_t queueIdx = ~0;
+        vk::raii::Device device{ nullptr }; /*Logical Device*/
+        vk::raii::Queue graphicsQueue{ nullptr };
+        vk::raii::Queue presentQueue{ nullptr };
+        vk::raii::PhysicalDevice physicalDevice{ nullptr };
+        vk::raii::SurfaceKHR surface{ nullptr };
+        uint32_t queueIdx = ~0;
 
     
     /*Swap chain*/
-    vk::raii::SwapchainKHR swapChain{ nullptr };
-    std::vector<vk::Image> swapChainImages;
-    vk::SurfaceFormatKHR swapChainSurfaceFormat;
-    vk::Extent2D swapChainExtent;
+        vk::raii::SwapchainKHR swapChain{ nullptr };
+        std::vector<vk::Image> swapChainImages;
+        vk::SurfaceFormatKHR swapChainSurfaceFormat;
+        vk::Extent2D swapChainExtent;
     
     /*Image Views*/
-    std::vector<vk::raii::ImageView> swapChainImageViews;
+        std::vector<vk::raii::ImageView> swapChainImageViews;
 
     /*Pipeline*/
-    vk::raii::PipelineLayout pipelineLayout{ nullptr };
-    vk::raii::Pipeline pipeline{ nullptr };
+        vk::raii::PipelineLayout pipelineLayout{ nullptr };
+        vk::raii::Pipeline pipeline{ nullptr };
+        vk::raii::DescriptorSetLayout descriptorSetLayout{ nullptr };
     /*Second Pipeline*/
-    vk::raii::PipelineLayout pipelineLayout2{ nullptr };
-    vk::raii::Pipeline pipeline2{ nullptr };
+        vk::raii::PipelineLayout pipelineLayout2{ nullptr };
+        vk::raii::Pipeline pipeline2{ nullptr };
 
     /*Command buffer object*/
-    vk::raii::CommandPool commandPool{ nullptr };
-    std::vector<vk::raii::CommandBuffer> commandBuffers;
+        vk::raii::CommandPool commandPool{ nullptr };
+        std::vector<vk::raii::CommandBuffer> commandBuffers;
 
     /*Frames in flight*/
-    uint32_t frameIdx{};
+        uint32_t frameIdx{};
 
     /*Synchronization objects*/
     /*Semaphores for now are mainly for swapchain operations, and Fences are mainly for drawing frames (do not want to override the command buffers before the previous drawFrame calls while the gpu is still processing it)*/
-    std::vector<vk::raii::Semaphore> presentCompleteSemaphore;
-    std::vector<vk::raii::Semaphore> renderFinishedSemaphore;
-    std::vector<vk::raii::Fence> inFlightFences;
+        std::vector<vk::raii::Semaphore> presentCompleteSemaphore;
+        std::vector<vk::raii::Semaphore> renderFinishedSemaphore;
+        std::vector<vk::raii::Fence> inFlightFences;
 
-    /*Vertex Buffers*/
-    vk::raii::Buffer vertexBuffer{ nullptr };
-    vk::raii::DeviceMemory vertexBufferMemory{ nullptr };
 
     void readVertices(std::initializer_list<Vertex> verticeValues);
 
@@ -118,28 +116,46 @@ private:
 
     void createImageView();
 
-    uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
-
     void drawFrame();
 
     void createGraphicsPipeline();
+
+    vk::raii::ShaderModule createShaderModule(std::vector<char> const& shader) const;
 
     void secondPipeline();
 
     void createSyncObjects();
 
+
+
+    void createDescriptorSetLayout();
+
     /*Command Buffer Stuff*/
-    void createCommandPool();
-    void createCommandBuffer();
-    void recordCommandBuffer(uint32_t imageIdx);
-    void transition_image_layout(uint32_t imageIdx, vk::ImageLayout oldLayout, vk::ImageLayout imageLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask);
+        void createCommandPool();
+        void createCommandBuffer();
+        void recordCommandBuffer(uint32_t imageIdx);
+        void transition_image_layout(uint32_t imageIdx, vk::ImageLayout oldLayout, vk::ImageLayout imageLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask);
 
     /*BUFFERS*/
-    void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags props, vk::raii::Buffer& buffer, vk::raii::DeviceMemory& bufferMemory);
-    void copyBuffer(vk::raii::Buffer& stagingBuffer, vk::raii::Buffer& vertexBuffer, vk::DeviceSize size);
-    void createVertexBuffer();
+        /*Vertex Buffers*/
+        vk::raii::Buffer vertexBuffer{ nullptr };
+        vk::raii::DeviceMemory vertexBufferMemory{ nullptr };
+        /*index Buffers*/
+        vk::raii::Buffer indexBuffer{ nullptr };
+        vk::raii::DeviceMemory indexBufferMemory{ nullptr };
+        /*Uniform Buffers*/
+        std::vector<vk::raii::Buffer> uniformBuffer;
+        std::vector<vk::raii::DeviceMemory> uniformBufferMemory;
+        std::vector<void*> mappedData;
 
-    vk::raii::ShaderModule createShaderModule(std::vector<char> const& shader) const;
+        uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
+        void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags props, vk::raii::Buffer& buffer, vk::raii::DeviceMemory& bufferMemory);
+        void copyBuffer(vk::raii::Buffer& stagingBuffer, vk::raii::Buffer& vertexBuffer, vk::DeviceSize size);
+        void createVertexBuffer();
+        void createIndexBuffer();
+        void createUniformBuffers();
+        void updateUniformBuffer(uint32_t currentImg);
+
 };
 
 

@@ -9,41 +9,17 @@ vk::raii::ShaderModule HelloTriangleApplication::createShaderModule(std::vector<
 	return vk::raii::ShaderModule { device, createInfo };
 }
 
-glm::mat4 projection(GLFWwindow*& window) {
-	int width, height;
-	glfwGetWindowSize(window, &width, &height);
 
-	float aspect{ static_cast<float>(width) / height };
-
-	float fov{ 45.f };
-
-	float tan{ glm::tan(glm::radians(fov / 2.f)) };
-
-	float n{ 0.1f };
-	float f{ 100.f };
-
-	glm::mat4 projectionMtx{ glm::identity<glm::mat4>() };
-
-	projectionMtx[0][0] = 1 / (aspect * tan);
-
-	projectionMtx[1][1] = -1 / tan;
-
-	projectionMtx[2][2] = f / (f - n);
-
-	projectionMtx[2][3] = (-n * f) / (f - n);
-
-	projectionMtx[3][2] = 1.f;
-
-	projectionMtx[3][3] = 0.f;
-
-	return glm::transpose(projectionMtx);
+void HelloTriangleApplication::createDescriptorSetLayout() {
+	vk::DescriptorSetLayoutBinding uboLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex, nullptr);
+	vk::DescriptorSetLayoutCreateInfo layoutInfo{.bindingCount = 1, .pBindings = &uboLayoutBinding};
+	descriptorSetLayout = vk::raii::DescriptorSetLayout(device, layoutInfo);
 }
 
 
+
+
 void HelloTriangleApplication::createGraphicsPipeline() {
-
-	proj = projection(window);
-
 
 	/*SHADERS---------------------*/
 	vk::raii::ShaderModule shaderModule{createShaderModule(readFile(std::string{"../shaders/slang.spv"}))}; /*note, probably need to find a better way to represent these dirs via cmake*/
@@ -54,14 +30,9 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 	vk::PipelineShaderStageCreateInfo shadersStage[] = { vertShaderStageInfo, fragShaderStageInfo };
 
 
-	
-
-
-
 	/*DYNAMIC STATES---------------*/
 	std::vector<vk::DynamicState> dynamicStates{vk::DynamicState::eViewport, vk::DynamicState::eScissor}; //This will cause the configuration of these values to be ignored, and you will be able (and required) to specify the data at drawing time
 	vk::PipelineDynamicStateCreateInfo dynamicState{ .dynamicStateCount = static_cast<uint32_t>(dynamicStates.size()), .pDynamicStates = dynamicStates.data() };
-
 
 
 	/*Vertex input----------------*/
@@ -115,7 +86,7 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 
 
 	/*Pipeline Layout*/
-	vk::PipelineLayoutCreateInfo layoutCreateInfo{ .setLayoutCount = 0, .pushConstantRangeCount = 0, .pPushConstantRanges = nullptr }; /*"my shaders don't use any uniforms or push constants right now."*/
+	vk::PipelineLayoutCreateInfo layoutCreateInfo{ .setLayoutCount = 1, .pSetLayouts = &*descriptorSetLayout ,.pushConstantRangeCount = 0, .pPushConstantRanges = nullptr }; /*"my shaders don't use any uniforms or push constants right now."*/
 	pipelineLayout = vk::raii::PipelineLayout(device, layoutCreateInfo);
 
 	/*Rendering, Pipeline creation*/

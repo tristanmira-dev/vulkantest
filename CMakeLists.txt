@@ -51,16 +51,16 @@ add_slang_shader_target(mainShaders SOURCES ${SHADER_SLANG_SOURCES})
 add_executable(mainStuff main.cpp)
 add_dependencies(mainStuff mainShaders)
 
-
 target_compile_definitions(mainStuff PRIVATE VULKAN_HPP_NO_STRUCT_CONSTRUCTORS) #CPP 20 feature
 target_compile_definitions(mainStuff PRIVATE VULKAN_HPP_HANDLE_ERROR_OUT_OF_DATE_AS_SUCCESS)
 target_compile_definitions(mainStuff PRIVATE VK_USE_PLATFORM_WIN32_KHR GLFW_INCLUDE_VULKAN)
+target_compile_definitions(mainStuff PRIVATE GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 #Headers for root
 target_include_directories(mainStuff PRIVATE include)
 
 #EXTRA SOURCES
-target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp graphicspipeline.cpp commandpool.cpp draw.cpp vertex.cpp buffers.cpp)
+target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp graphicspipeline.cpp commandpool.cpp draw.cpp vertex.cpp buffers.cpp commonMath.cpp)
 
 target_link_libraries(mainStuff PRIVATE Vulkan::Vulkan)
 target_link_libraries(mainStuff PRIVATE glfw)

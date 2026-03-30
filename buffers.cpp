@@ -52,3 +52,41 @@ void HelloTriangleApplication::createBuffer(vk::DeviceSize size, vk::BufferUsage
 	buffer.bindMemory(*bufferMemory, 0);
 	
 }
+
+void HelloTriangleApplication::createIndexBuffer() {
+
+	vk::DeviceSize idxBuffSize{ indices.size() * sizeof(indices[0]) };
+
+	vk::raii::Buffer stageIndexBuff{ nullptr };
+	vk::raii::DeviceMemory stageIndexMemoryBuff{ nullptr };
+
+	createBuffer(idxBuffSize, vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostCoherent | vk::MemoryPropertyFlagBits::eHostVisible, stageIndexBuff, stageIndexMemoryBuff);
+
+	void* data{ stageIndexMemoryBuff.mapMemory(0, idxBuffSize) };
+
+	memcpy(data, indices.data(), idxBuffSize);
+
+	stageIndexMemoryBuff.unmapMemory();
+
+	createBuffer(idxBuffSize, vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer, vk::MemoryPropertyFlagBits::eDeviceLocal, indexBuffer, indexBufferMemory);
+
+	copyBuffer(stageIndexBuff, indexBuffer, idxBuffSize);
+
+}
+
+void HelloTriangleApplication::createUniformBuffers() {
+	uniformBuffer.clear();
+	uniformBufferMemory.clear();
+	mappedData.clear();
+
+	for (std::size_t i{}; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		vk::DeviceSize size{ sizeof(UniformBufferObject) };
+		vk::raii::Buffer stageBuff{ nullptr };
+		vk::raii::DeviceMemory stageMemoryBuff{ nullptr };
+
+		createBuffer(size, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stageBuff, stageMemoryBuff);
+		uniformBuffer.emplace_back(std::move(stageBuff));
+		uniformBufferMemory.emplace_back(std::move(stageMemoryBuff));
+		mappedData.emplace_back(uniformBufferMemory[i].mapMemory(0, size));
+	}
+}

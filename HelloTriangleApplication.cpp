@@ -99,16 +99,15 @@ void HelloTriangleApplication::initVulkan() {
     */
 
     readVertices({
-        // Left triangle
-        {{-0.75f, -0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
-        {{-0.25f,  0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
-        {{-0.75f,  0.5f, 0.f}, {0.0f, 0.0f, 1.0f}},
-
-        // Right triangle
-        {{ 0.25f, -0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
-        {{ 0.75f, -0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
-        {{ 0.75f,  0.5f, 0.f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, -0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
+        {{0.5f, -0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
+        {{0.5f, 0.5f, 0.f}, {0.0f, 0.0f, 1.0f}},
+        {{-0.5f, 0.5f, 0.f}, {1.0f, 1.0f, 1.0f}}
     });
+
+    indices = std::vector<uint32_t>{
+        0, 1, 2, 2, 3, 0
+    };
 
 
     setupDebugMessenger();
@@ -119,10 +118,13 @@ void HelloTriangleApplication::initVulkan() {
     createLogicalDevice();
     createSwapChain(); /*8th and counting, MAN OH MAN*/
     createImageView(); /*an image view simply describes how to access the image, and which part to access*/
+    createDescriptorSetLayout();
     createGraphicsPipeline();
     secondPipeline();
     createCommandPool();
     createVertexBuffer();
+    createIndexBuffer();
+    createUniformBuffers();
     createCommandBuffer();
     createSyncObjects();
 }
@@ -349,6 +351,7 @@ void HelloTriangleApplication::mainLoop() {
         auto endTime = std::chrono::high_resolution_clock::now() - startTime;
 
         float delta = std::chrono::duration<float>(endTime).count();
+        deltaTime = delta;
 
         accumulator += delta;
         frames++;

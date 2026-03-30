@@ -1,5 +1,5 @@
 #include "HelloTriangleApplication.hpp"
-
+#include "commonMath.hpp"
 #include <iostream>
 
 /*
@@ -79,7 +79,14 @@ void HelloTriangleApplication::createSyncObjects() {
 		presentCompleteSemaphore.emplace_back(vk::raii::Semaphore(device, vk::SemaphoreCreateInfo{}));
 
 	}
-
-
 	
+}
+
+void HelloTriangleApplication::updateUniformBuffer(uint32_t currentImg) {
+	UniformBufferObject ubo{};
+	ubo.model = glm::rotate(glm::mat4(1.f), deltaTime * glm::radians(90.f), glm::vec3(0.f, 0.f, 1.f));
+	ubo.view = glm::lookAt(glm::vec3(2.f, 2.f, 2.f), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 1.f));
+	ubo.projection = projection(window, 45.f, 0.1f, 10.f);
+
+	memcpy(mappedData[currentImg], &ubo, sizeof(ubo));
 }
