@@ -99,17 +99,27 @@ void HelloTriangleApplication::initVulkan() {
     */
 
     readVertices({
-        // Left triangle
-        {{-0.75f, -0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
-        {{-0.25f,  0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
-        {{-0.75f,  0.5f, 0.f}, {0.0f, 0.0f, 1.0f}},
-
-        // Right triangle
-        {{ 0.25f, -0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
-        {{ 0.75f, -0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
-        {{ 0.75f,  0.5f, 0.f}, {0.0f, 0.0f, 1.0f}},
+        // Front face - red
+        {{-1, -1, 4}, {1, 0, 0}}, {{ 1, -1, 4}, {1, 0, 0}}, {{ 1,  1, 4}, {1, 0, 0}},
+        {{-1, -1, 4}, {1, 0, 0}}, {{ 1,  1, 4}, {1, 0, 0}}, {{-1,  1, 4}, {1, 0, 0}},
+        // Back face - green
+        {{-1, -1, 6}, {0, 1, 0}}, {{-1,  1, 6}, {0, 1, 0}}, {{ 1,  1, 6}, {0, 1, 0}},
+        {{-1, -1, 6}, {0, 1, 0}}, {{ 1,  1, 6}, {0, 1, 0}}, {{ 1, -1, 6}, {0, 1, 0}},
+        // Top face - blue
+        {{-1,  1, 4}, {0, 0, 1}}, {{ 1,  1, 4}, {0, 0, 1}}, {{ 1,  1, 6}, {0, 0, 1}},
+        {{-1,  1, 4}, {0, 0, 1}}, {{ 1,  1, 6}, {0, 0, 1}}, {{-1,  1, 6}, {0, 0, 1}},
+        // Bottom face - yellow
+        {{-1, -1, 4}, {1, 1, 0}}, {{-1, -1, 6}, {1, 1, 0}}, {{ 1, -1, 6}, {1, 1, 0}},
+        {{-1, -1, 4}, {1, 1, 0}}, {{ 1, -1, 6}, {1, 1, 0}}, {{ 1, -1, 4}, {1, 1, 0}},
+        // Right face - magenta
+        {{ 1, -1, 4}, {1, 0, 1}}, {{ 1, -1, 6}, {1, 0, 1}}, {{ 1,  1, 6}, {1, 0, 1}},
+        {{ 1, -1, 4}, {1, 0, 1}}, {{ 1,  1, 6}, {1, 0, 1}}, {{ 1,  1, 4}, {1, 0, 1}},
+        // Left face - cyan
+        {{-1, -1, 4}, {0, 1, 1}}, {{-1,  1, 4}, {0, 1, 1}}, {{-1,  1, 6}, {0, 1, 1}},
+        {{-1, -1, 4}, {0, 1, 1}}, {{-1,  1, 6}, {0, 1, 1}}, {{-1, -1, 6}, {0, 1, 1}},
     });
 
+    pushConst.pos = glm::vec3(3.f, 0.f, 5.f);
 
     setupDebugMessenger();
     createSurface();
@@ -339,6 +349,7 @@ void HelloTriangleApplication::mainLoop() {
     float frames{};
 
     while (!glfwWindowShouldClose(window)) {
+        
 
         startTime = std::chrono::high_resolution_clock::now();
 
@@ -349,6 +360,9 @@ void HelloTriangleApplication::mainLoop() {
         auto endTime = std::chrono::high_resolution_clock::now() - startTime;
 
         float delta = std::chrono::duration<float>(endTime).count();
+
+        pushConst.pos.x += delta;
+        pushConst.pos.z += delta;
 
         accumulator += delta;
         frames++;

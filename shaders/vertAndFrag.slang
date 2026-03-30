@@ -1,3 +1,11 @@
+struct Matrix {
+    float4x4 proj;
+    float3 pos;
+}
+
+[[vk::push_constant]]
+Matrix mtx;
+
 struct VSInput {
     float3 pos;
     float3 col;
@@ -11,7 +19,7 @@ struct VertexOutput {
 [shader("vertex")]
 VertexOutput vertMain(VSInput input) {
     VertexOutput output;
-    output.sv_position = float4(input.pos.xy, 0.0, 1.0);
+    output.sv_position = mul(mtx.proj, float4(input.pos.xyz, 1.0).add(float4(mtx.pos, 0.0)));
 	output.color = input.col;
 	return output;
 }

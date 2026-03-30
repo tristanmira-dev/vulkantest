@@ -13,6 +13,11 @@
 
 #include "vertex.hpp"
 
+struct PushConst {
+    glm::mat4 proj;
+    glm::vec3 pos;
+};
+
 
 class HelloTriangleApplication {
 public:
@@ -30,7 +35,9 @@ private:
         vk::KHRSwapchainExtensionName /*extension of the gpu for presenting to the monitor*/
     };
 
-    glm::mat4x4 proj;
+
+
+    PushConst pushConst;
 
     std::vector<Vertex> vertices;
 

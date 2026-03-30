@@ -65,6 +65,7 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 
 	commandBuffer.bindVertexBuffers(0, *vertexBuffer, { 0 });
 
+	commandBuffer.pushConstants<PushConst>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, pushConst);
 	commandBuffer.setViewport(0, vk::Viewport(0.f, 0.f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.f, 0.f));
 	commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), swapChainExtent));
 

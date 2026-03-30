@@ -42,7 +42,7 @@ glm::mat4 projection(GLFWwindow*& window) {
 
 void HelloTriangleApplication::createGraphicsPipeline() {
 
-	proj = projection(window);
+	pushConst.proj = projection(window);
 
 
 	/*SHADERS---------------------*/
@@ -97,7 +97,7 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 
 
 	/*Rasterizer*/
-	vk::PipelineRasterizationStateCreateInfo rasterizer{ .depthClampEnable = vk::False, .rasterizerDiscardEnable = vk::False, .polygonMode = vk::PolygonMode::eFill, .cullMode = vk::CullModeFlagBits::eNone,
+	vk::PipelineRasterizationStateCreateInfo rasterizer{ .depthClampEnable = vk::False, .rasterizerDiscardEnable = vk::False, .polygonMode = vk::PolygonMode::eFill, .cullMode = vk::CullModeFlagBits::eBack,
 		.frontFace = vk::FrontFace::eCounterClockwise, .depthBiasEnable = vk::False, .depthBiasSlopeFactor = 1.f, .lineWidth = 1.f
 	};
 
@@ -114,8 +114,14 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 	vk::PipelineColorBlendStateCreateInfo colorBlending{ .logicOpEnable = vk::False, .logicOp = vk::LogicOp::eCopy, .attachmentCount = 1, .pAttachments = &colorBlendAttachment };
 
 
+	vk::PushConstantRange pushConstantRange{
+		.stageFlags = vk::ShaderStageFlagBits::eVertex,
+		.offset = 0,
+		.size = sizeof(pushConst),
+	};
+
 	/*Pipeline Layout*/
-	vk::PipelineLayoutCreateInfo layoutCreateInfo{ .setLayoutCount = 0, .pushConstantRangeCount = 0, .pPushConstantRanges = nullptr }; /*"my shaders don't use any uniforms or push constants right now."*/
+	vk::PipelineLayoutCreateInfo layoutCreateInfo{ .setLayoutCount = 0, .pushConstantRangeCount = 1, .pPushConstantRanges = &pushConstantRange }; /*"my shaders don't use any uniforms or push constants right now."*/
 	pipelineLayout = vk::raii::PipelineLayout(device, layoutCreateInfo);
 
 	/*Rendering, Pipeline creation*/
@@ -189,7 +195,7 @@ void HelloTriangleApplication::secondPipeline() {
 	vk::PushConstantRange range{
 		.stageFlags = vk::ShaderStageFlagBits::eVertex,
 		.offset = 0,
-		.size = sizeof(proj)
+		.size = sizeof(pushConst)
 	};
 
 	/*pipeline layout*/
