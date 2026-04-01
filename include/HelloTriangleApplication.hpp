@@ -147,11 +147,15 @@ private:
         std::vector<vk::raii::Buffer> uniformBuffer;
         std::vector<vk::raii::DeviceMemory> uniformBufferMemory;
         std::vector<void*> mappedData;
+        vk::raii::DescriptorPool descriptorPool{ nullptr };
+        std::vector<vk::raii::DescriptorSet> descriptorSets;
 
         uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
         void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags props, vk::raii::Buffer& buffer, vk::raii::DeviceMemory& bufferMemory);
         void copyBuffer(vk::raii::Buffer& stagingBuffer, vk::raii::Buffer& vertexBuffer, vk::DeviceSize size);
         void createVertexBuffer();
+        void createDescriptorPool();
+        void createDescriptorSets();
         void createIndexBuffer();
         void createUniformBuffers();
         void updateUniformBuffer(uint32_t currentImg);

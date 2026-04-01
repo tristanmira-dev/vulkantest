@@ -37,6 +37,8 @@ void HelloTriangleApplication::drawFrame() {
 
 	device.resetFences(*inFlightFences[frameIdx]);
 
+	updateUniformBuffer(frameIdx);
+
 	recordCommandBuffer(imageIndex);
 
 	vk::PipelineStageFlags waitDestinationStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput); /*only blocks when the gpu needs to write pixels to the image*/
@@ -82,10 +84,26 @@ void HelloTriangleApplication::createSyncObjects() {
 	
 }
 
+float currentAngle{50.f};
+
 void HelloTriangleApplication::updateUniformBuffer(uint32_t currentImg) {
+	struct Cam {
+		glm::vec3 pos{ 0.f, 3.f, -9.f };
+	};
+
+	Cam cam{};
+
+	float rotationSpeed{ 1.f };
 	UniformBufferObject ubo{};
-	ubo.model = glm::rotate(glm::mat4(1.f), deltaTime * glm::radians(90.f), glm::vec3(0.f, 0.f, 1.f));
-	ubo.view = glm::lookAt(glm::vec3(2.f, 2.f, 2.f), glm::vec3(0.f, 0.f, 0.f), glm::vec3(0.f, 0.f, 1.f));
+	ubo.model = glm::rotate(glm::mat4(1.f), currentAngle += deltaTime * rotationSpeed, glm::vec3(0.f, 0.f, 1.f));
+
+	glm::mat4 camTranslate{ glm::identity<glm::mat4>() };
+	camTranslate[3][0] = -cam.pos.x;
+	camTranslate[3][1] = -cam.pos.y;
+	camTranslate[3][2] = -cam.pos.z;
+
+	ubo.view = camTranslate;
+
 	ubo.projection = projection(window, 45.f, 0.1f, 10.f);
 
 	memcpy(mappedData[currentImg], &ubo, sizeof(ubo));

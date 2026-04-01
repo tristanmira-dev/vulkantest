@@ -64,24 +64,13 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 
 
 	commandBuffer.bindVertexBuffers(0, *vertexBuffer, { 0 });
+	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, *descriptorSets[frameIdx], nullptr);
 	commandBuffer.bindIndexBuffer(*indexBuffer, 0, vk::IndexType::eUint32);
 
 	commandBuffer.setViewport(0, vk::Viewport(0.f, 0.f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.f, 0.f));
 	commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), swapChainExtent));
 
 	commandBuffer.drawIndexed(indices.size(), 1, 0, 0, 0);
-
-
-
-
-	//commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline2);
-	//commandBuffer.setViewport(0, vk::Viewport(0.f, 0.f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.f, 0.f));
-	//commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D{ 0, 0 }, swapChainExtent));
-
-
-	//commandBuffer.pushConstants<glm::mat4>(*pipelineLayout2, vk::ShaderStageFlagBits::eVertex, 0, proj);
-	//commandBuffer.draw(36, 1, 0, 0);
-
 
 
 	commandBuffer.endRendering();

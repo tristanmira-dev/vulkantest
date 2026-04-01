@@ -90,3 +90,23 @@ void HelloTriangleApplication::createUniformBuffers() {
 		mappedData.emplace_back(uniformBufferMemory[i].mapMemory(0, size));
 	}
 }
+
+void HelloTriangleApplication::createDescriptorPool() {
+	vk::DescriptorPoolSize poolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT);
+	vk::DescriptorPoolCreateInfo layoutInfo{ .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, .maxSets = MAX_FRAMES_IN_FLIGHT, .poolSizeCount = 1, .pPoolSizes = &poolSize };
+	descriptorPool = vk::raii::DescriptorPool(device, layoutInfo);
+}
+
+void HelloTriangleApplication::createDescriptorSets() {
+	std::vector<vk::DescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, *descriptorSetLayout);
+	vk::DescriptorSetAllocateInfo allocInfo{ .descriptorPool = descriptorPool, .descriptorSetCount = static_cast<uint32_t>(layouts.size()), .pSetLayouts = layouts.data() };
+
+	descriptorSets.clear();
+	descriptorSets = device.allocateDescriptorSets(allocInfo);
+
+	for (int i{}; i < MAX_FRAMES_IN_FLIGHT; ++i) {
+		vk::DescriptorBufferInfo bufferInfo{ .buffer = uniformBuffer[i], .offset = 0, .range = sizeof(UniformBufferObject) };
+		vk::WriteDescriptorSet descriptorWrite{ .dstSet = descriptorSets[i], .dstBinding = 0, .dstArrayElement = 0, .descriptorCount = 1, .descriptorType = vk::DescriptorType::eUniformBuffer, .pBufferInfo = &bufferInfo };
+		device.updateDescriptorSets(descriptorWrite, {});
+	}
+}
