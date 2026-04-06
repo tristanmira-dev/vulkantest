@@ -13,13 +13,16 @@
 #include "vertex.hpp"
 
 
+struct Cam {
+    glm::vec3 pos{ 0.f, 0.f, 0.f };
+};
+
+
 class HelloTriangleApplication {
 public:
     void run();
 
 private:
-
-
 
     const std::vector<char const*> validationLayers{
         "VK_LAYER_KHRONOS_validation"
@@ -37,6 +40,8 @@ private:
     static constexpr int MAX_FRAMES_IN_FLIGHT{ 2 };
 
     bool frameBufferResized{ false };
+
+    Cam cam;
     
 
     GLFWwindow* window{ nullptr };

@@ -72,11 +72,9 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 
 
 	size_t totalGameObjsP{ gameObjects.gameObjInfoCollection.size() };
-	uint32_t offset{};
 	for (size_t i{}; i < totalGameObjsP; ++i) {
 		commandBuffer.pushConstants<int>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, static_cast<int>(i));
-		commandBuffer.drawIndexed(gameObjects.verticesInformation[i], 1, offset, 0, 0);
-		offset += gameObjects.verticesInformation[i];
+		commandBuffer.drawIndexed(gameObjects.verticesInformation[gameObjects.meshIdx[i]].totalIndices, 1,  gameObjects.verticesInformation[gameObjects.meshIdx[i]].start - gameObjects.indices.begin(), 0, 0);
 	}
 
 

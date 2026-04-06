@@ -90,11 +90,7 @@ void HelloTriangleApplication::createSyncObjects() {
 float currentAngle{50.f};
 
 void HelloTriangleApplication::updateUniformBuffer(uint32_t currentImg) {
-	struct Cam {
-		glm::vec3 pos{ 0.f, 0.f, 0.f };
-	};
 
-	Cam cam{};
 
 	float rotationSpeed{ 1.f };
 	UniformBufferObject ubo{};
@@ -107,7 +103,7 @@ void HelloTriangleApplication::updateUniformBuffer(uint32_t currentImg) {
 
 	ubo.view = camTranslate;
 
-	ubo.projection = projection(window, 100.f, 0.1f, 10.f);
+	ubo.projection = projection(window, 100.f, 0.1f, 100.f);
 
 	memcpy(mappedData[currentImg], &ubo, sizeof(ubo));
 

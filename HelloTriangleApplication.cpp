@@ -99,45 +99,72 @@ void HelloTriangleApplication::initVulkan() {
     */
 
 
-    gameObjects.addGameObject(
+    gameObjects.addMeshObject(
         {
-            {{-0.5f, -0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
-            {{0.5f, -0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
-            {{0.5f, 0.5f, 0.f}, {0.0f, 0.0f, 1.0f}},
-            {{-0.5f, 0.5f, 0.f}, {1.0f, 1.0f, 1.0f}}
-        }, 
-        {},
-        std::vector<uint32_t> { 0, 1, 2, 2, 3, 0 }
-    );
-
-    gameObjects.gameObjInfoCollection[0].moveTo(glm::vec3{ 3.f, 3.f, 6.f });
-
-
-    gameObjects.addGameObject(
-        {
-            // Front face
-            {{-0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}},
-            {{ 0.5f, -0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}},
-            {{ 0.5f,  0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}},
-            {{-0.5f,  0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}},
-            // Right face
-            {{ 0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 1.0f}},
-            {{ 0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 1.0f}},
-            {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f, 1.0f}},
-            {{ 0.5f,  0.5f,  0.5f}, {1.0f, 0.0f, 1.0f}},
+            // Front - red
+            {{-1.f, -1.f, 0.f}, {1.0f, 0.0f, 0.0f}},
+            {{ 1.f, -1.f, 0.f}, {1.0f, 0.0f, 0.0f}},
+            {{ 1.f,  1.f, 0.f}, {1.0f, 0.0f, 0.0f}},
+            {{-1.f, -1.f, 0.f}, {1.0f, 0.0f, 0.0f}},
+            {{ 1.f,  1.f, 0.f}, {1.0f, 0.0f, 0.0f}},
+            {{-1.f,  1.f, 0.f}, {1.0f, 0.0f, 0.0f}},
+            // Back - green
+            {{-1.f, -1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
+            {{-1.f,  1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
+            {{ 1.f,  1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
+            {{-1.f, -1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
+            {{ 1.f,  1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
+            {{ 1.f, -1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
+            // Top - blue
+            {{-1.f,  1.f, 0.f}, {0.0f, 0.0f, 1.0f}},
+            {{ 1.f,  1.f, 0.f}, {0.0f, 0.0f, 1.0f}},
+            {{ 1.f,  1.f, 2.f}, {0.0f, 0.0f, 1.0f}},
+            {{-1.f,  1.f, 0.f}, {0.0f, 0.0f, 1.0f}},
+            {{ 1.f,  1.f, 2.f}, {0.0f, 0.0f, 1.0f}},
+            {{-1.f,  1.f, 2.f}, {0.0f, 0.0f, 1.0f}},
+            // Bottom - yellow
+            {{-1.f, -1.f, 0.f}, {1.0f, 1.0f, 0.0f}},
+            {{-1.f, -1.f, 2.f}, {1.0f, 1.0f, 0.0f}},
+            {{ 1.f, -1.f, 2.f}, {1.0f, 1.0f, 0.0f}},
+            {{-1.f, -1.f, 0.f}, {1.0f, 1.0f, 0.0f}},
+            {{ 1.f, -1.f, 2.f}, {1.0f, 1.0f, 0.0f}},
+            {{ 1.f, -1.f, 0.f}, {1.0f, 1.0f, 0.0f}},
+            // Right - magenta
+            {{ 1.f, -1.f, 0.f}, {1.0f, 0.0f, 1.0f}},
+            {{ 1.f, -1.f, 2.f}, {1.0f, 0.0f, 1.0f}},
+            {{ 1.f,  1.f, 2.f}, {1.0f, 0.0f, 1.0f}},
+            {{ 1.f, -1.f, 0.f}, {1.0f, 0.0f, 1.0f}},
+            {{ 1.f,  1.f, 2.f}, {1.0f, 0.0f, 1.0f}},
+            {{ 1.f,  1.f, 0.f}, {1.0f, 0.0f, 1.0f}},
+            // Left - cyan
+            {{-1.f, -1.f, 0.f}, {0.0f, 1.0f, 1.0f}},
+            {{-1.f,  1.f, 0.f}, {0.0f, 1.0f, 1.0f}},
+            {{-1.f,  1.f, 2.f}, {0.0f, 1.0f, 1.0f}},
+            {{-1.f, -1.f, 0.f}, {0.0f, 1.0f, 1.0f}},
+            {{-1.f,  1.f, 2.f}, {0.0f, 1.0f, 1.0f}},
+            {{-1.f, -1.f, 2.f}, {0.0f, 1.0f, 1.0f}},
         },
-        {},
         std::vector<uint32_t> {
-        // Front
-        0, 1, 2, 2, 3, 0,
-            // Right
-            4, 5, 6, 6, 7, 4,
-    }
+            0, 1, 2, 3, 4, 5,
+            6, 7, 8, 9, 10, 11,
+            12, 13, 14, 15, 16, 17,
+            18, 19, 20, 21, 22, 23,
+            24, 25, 26, 27, 28, 29,
+            30, 31, 32, 33, 34, 35
+        }
     );
 
-    gameObjects.gameObjInfoCollection[1].moveTo(glm::vec3{ -5.f, 2.f, 0.f });
+    gameObjects.addGameObject({}, 0);
 
+    gameObjects.addGameObject({}, 0);
+    gameObjects.addGameObject({}, 0);
+
+    gameObjects.gameObjInfoCollection[0].moveTo({ -2.f, 0.f, 10.f });
    
+    gameObjects.gameObjInfoCollection[1].moveTo({ 3.f, 0.f, 10.f });
+    gameObjects.gameObjInfoCollection[2].moveTo({ 0.f, 0.f, 12.f });
+
+
 
 
     setupDebugMessenger();
@@ -379,6 +406,21 @@ void HelloTriangleApplication::mainLoop() {
         glfwPollEvents();
         drawFrame();
 
+        glfwSetWindowUserPointer(window, this);
+
+        glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+            HelloTriangleApplication* ptr{ reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window)) };
+
+            if (key == GLFW_KEY_W) {
+                ptr->cam.pos.z += ptr->deltaTime * 500.f;
+            }if (key == GLFW_KEY_S) {
+                ptr->cam.pos.z -= ptr->deltaTime * 500.f;
+            }if (key == GLFW_KEY_A) {
+                ptr->cam.pos.x -= ptr->deltaTime * 500.f;
+            }if (key == GLFW_KEY_D) {
+                ptr->cam.pos.x += ptr->deltaTime * 500.f;
+            }
+        });
 
         auto endTime = std::chrono::high_resolution_clock::now() - startTime;
 
