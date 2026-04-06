@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <initializer_list>
+#include <gameobjectspool.hpp>
 
 #include "vertex.hpp"
 
@@ -87,6 +88,8 @@ private:
         std::vector<vk::raii::Semaphore> renderFinishedSemaphore;
         std::vector<vk::raii::Fence> inFlightFences;
 
+    GameObjectPool gameObjects;
+
 
     void readVertices(std::initializer_list<Vertex> verticeValues);
 
@@ -149,6 +152,9 @@ private:
         std::vector<void*> mappedData;
         vk::raii::DescriptorPool descriptorPool{ nullptr };
         std::vector<vk::raii::DescriptorSet> descriptorSets;
+        std::vector<vk::raii::Buffer> uniformBuffer2;
+        std::vector<vk::raii::DeviceMemory> uniformBufferMemory2;
+        std::vector<void*> mappedData2;
 
         uint32_t findMemoryType(uint32_t typeFilter, vk::MemoryPropertyFlags properties);
         void createBuffer(vk::DeviceSize size, vk::BufferUsageFlags usage, vk::MemoryPropertyFlags props, vk::raii::Buffer& buffer, vk::raii::DeviceMemory& bufferMemory);

@@ -2,6 +2,7 @@
 #define VERTEX_HPP
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <vulkan/vulkan.hpp>
 #include <array>
 
@@ -26,6 +27,20 @@ struct UniformBufferObject {
 	glm::mat4 model;
 	glm::mat4 view;
 	glm::mat4 projection;
+};
+
+struct GameObjectInfo {
+	glm::mat4 transform;
+
+	GameObjectInfo() : transform{  } {
+		transform = glm::identity<glm::mat4>();
+	}
+
+	void moveTo(glm::vec3 position) {
+		transform[3][0] += position.x;
+		transform[3][1] += position.y;
+		transform[3][2] += position.z;
+	}
 };
 
 

@@ -98,16 +98,46 @@ void HelloTriangleApplication::initVulkan() {
     PLACEHOLDER FIND A BETTER SPOT FOR THESE INITS
     */
 
-    readVertices({
-        {{-0.5f, -0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
-        {{0.5f, -0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
-        {{0.5f, 0.5f, 0.f}, {0.0f, 0.0f, 1.0f}},
-        {{-0.5f, 0.5f, 0.f}, {1.0f, 1.0f, 1.0f}}
-    });
 
-    indices = std::vector<uint32_t>{
-        0, 1, 2, 2, 3, 0
-    };
+    gameObjects.addGameObject(
+        {
+            {{-0.5f, -0.5f, 0.f}, {1.0f, 0.0f, 0.0f}},
+            {{0.5f, -0.5f, 0.f}, {0.0f, 1.0f, 0.0f}},
+            {{0.5f, 0.5f, 0.f}, {0.0f, 0.0f, 1.0f}},
+            {{-0.5f, 0.5f, 0.f}, {1.0f, 1.0f, 1.0f}}
+        }, 
+        {},
+        std::vector<uint32_t> { 0, 1, 2, 2, 3, 0 }
+    );
+
+    gameObjects.gameObjInfoCollection[0].moveTo(glm::vec3{ 3.f, 3.f, 6.f });
+
+
+    gameObjects.addGameObject(
+        {
+            // Front face
+            {{-0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 0.0f}},
+            {{ 0.5f, -0.5f,  0.5f}, {0.0f, 1.0f, 0.0f}},
+            {{ 0.5f,  0.5f,  0.5f}, {0.0f, 0.0f, 1.0f}},
+            {{-0.5f,  0.5f,  0.5f}, {1.0f, 1.0f, 1.0f}},
+            // Right face
+            {{ 0.5f, -0.5f,  0.5f}, {1.0f, 0.0f, 1.0f}},
+            {{ 0.5f, -0.5f, -0.5f}, {1.0f, 0.0f, 1.0f}},
+            {{ 0.5f,  0.5f, -0.5f}, {1.0f, 0.0f, 1.0f}},
+            {{ 0.5f,  0.5f,  0.5f}, {1.0f, 0.0f, 1.0f}},
+        },
+        {},
+        std::vector<uint32_t> {
+        // Front
+        0, 1, 2, 2, 3, 0,
+            // Right
+            4, 5, 6, 6, 7, 4,
+    }
+    );
+
+    gameObjects.gameObjInfoCollection[1].moveTo(glm::vec3{ -5.f, 2.f, 0.f });
+
+   
 
 
     setupDebugMessenger();

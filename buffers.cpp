@@ -16,7 +16,7 @@ void HelloTriangleApplication::copyBuffer(vk::raii::Buffer &stagingBuffer, vk::r
 
 void HelloTriangleApplication::createVertexBuffer() {
 
-	vk::DeviceSize bufferSize{ sizeof(vertices[0]) * vertices.size() };
+	vk::DeviceSize bufferSize{ sizeof(gameObjects.vertices[0]) * gameObjects.vertices.size() };
 
 	vk::raii::Buffer stagingBuffer{ nullptr };
 
@@ -26,7 +26,7 @@ void HelloTriangleApplication::createVertexBuffer() {
 
 	void* stagingMemory{ stagingBufferMemory.mapMemory(0, bufferSize) };
 
-	memcpy(stagingMemory, vertices.data(), bufferSize);
+	memcpy(stagingMemory, gameObjects.vertices.data(), bufferSize);
 
 	stagingBufferMemory.unmapMemory();
 
@@ -55,8 +55,8 @@ void HelloTriangleApplication::createBuffer(vk::DeviceSize size, vk::BufferUsage
 
 void HelloTriangleApplication::createIndexBuffer() {
 
-	vk::DeviceSize idxBuffSize{ indices.size() * sizeof(indices[0]) };
-
+	vk::DeviceSize idxBuffSize{ gameObjects.indices.size() * sizeof(gameObjects.indices[0]) };
+	
 	vk::raii::Buffer stageIndexBuff{ nullptr };
 	vk::raii::DeviceMemory stageIndexMemoryBuff{ nullptr };
 
@@ -64,7 +64,7 @@ void HelloTriangleApplication::createIndexBuffer() {
 
 	void* data{ stageIndexMemoryBuff.mapMemory(0, idxBuffSize) };
 
-	memcpy(data, indices.data(), idxBuffSize);
+	memcpy(data, gameObjects.indices.data(), idxBuffSize);
 
 	stageIndexMemoryBuff.unmapMemory();
 
@@ -84,16 +84,28 @@ void HelloTriangleApplication::createUniformBuffers() {
 		vk::raii::Buffer stageBuff{ nullptr };
 		vk::raii::DeviceMemory stageMemoryBuff{ nullptr };
 
+		vk::DeviceSize size2{ sizeof(GameObjectInfo) * gameObjects.vertices.size() };
+		vk::raii::Buffer stageBuff2{ nullptr };
+		vk::raii::DeviceMemory stageMemoryBuff2{ nullptr };
+
 		createBuffer(size, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stageBuff, stageMemoryBuff);
 		uniformBuffer.emplace_back(std::move(stageBuff));
 		uniformBufferMemory.emplace_back(std::move(stageMemoryBuff));
 		mappedData.emplace_back(uniformBufferMemory[i].mapMemory(0, size));
+
+		createBuffer(size2, vk::BufferUsageFlagBits::eStorageBuffer, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stageBuff2, stageMemoryBuff2);
+		uniformBuffer2.emplace_back(std::move(stageBuff2));
+		uniformBufferMemory2.emplace_back(std::move(stageMemoryBuff2));
+		mappedData2.emplace_back(uniformBufferMemory2[i].mapMemory(0, size2));
 	}
 }
 
 void HelloTriangleApplication::createDescriptorPool() {
-	vk::DescriptorPoolSize poolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT);
-	vk::DescriptorPoolCreateInfo layoutInfo{ .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, .maxSets = MAX_FRAMES_IN_FLIGHT, .poolSizeCount = 1, .pPoolSizes = &poolSize };
+	std::array<vk::DescriptorPoolSize, 2> poolSize{
+		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT),
+		vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer, MAX_FRAMES_IN_FLIGHT)
+	};
+	vk::DescriptorPoolCreateInfo layoutInfo{ .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, .maxSets = MAX_FRAMES_IN_FLIGHT, .poolSizeCount = 2, .pPoolSizes = poolSize.data() };
 	descriptorPool = vk::raii::DescriptorPool(device, layoutInfo);
 }
 
@@ -106,7 +118,14 @@ void HelloTriangleApplication::createDescriptorSets() {
 
 	for (int i{}; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		vk::DescriptorBufferInfo bufferInfo{ .buffer = uniformBuffer[i], .offset = 0, .range = sizeof(UniformBufferObject) };
-		vk::WriteDescriptorSet descriptorWrite{ .dstSet = descriptorSets[i], .dstBinding = 0, .dstArrayElement = 0, .descriptorCount = 1, .descriptorType = vk::DescriptorType::eUniformBuffer, .pBufferInfo = &bufferInfo };
+		vk::DescriptorBufferInfo bufferInfo2{ .buffer = uniformBuffer2[i], .offset = 0, .range = sizeof(GameObjectInfo) * gameObjects.vertices.size() };
+		vk::WriteDescriptorSet descriptorWrite[2]{ 
+			{.dstSet = descriptorSets[i], .dstBinding = 0, .dstArrayElement = 0, .descriptorCount = 1, .descriptorType = vk::DescriptorType::eUniformBuffer, .pBufferInfo = &bufferInfo },
+			{.dstSet = descriptorSets[i], .dstBinding = 1, .dstArrayElement = 0, .descriptorCount = 1, .descriptorType = vk::DescriptorType::eStorageBuffer, .pBufferInfo = &bufferInfo2 }
+		};
+
+
+		
 		device.updateDescriptorSets(descriptorWrite, {});
 	}
 }

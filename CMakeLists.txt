@@ -60,7 +60,7 @@ target_compile_definitions(mainStuff PRIVATE GLM_FORCE_DEPTH_ZERO_TO_ONE)
 target_include_directories(mainStuff PRIVATE include)
 
 #EXTRA SOURCES
-target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp graphicspipeline.cpp commandpool.cpp draw.cpp vertex.cpp buffers.cpp commonMath.cpp)
+target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp graphicspipeline.cpp commandpool.cpp draw.cpp vertex.cpp buffers.cpp commonMath.cpp include/gameobjectspool.hpp)
 
 target_link_libraries(mainStuff PRIVATE Vulkan::Vulkan)
 target_link_libraries(mainStuff PRIVATE glfw)

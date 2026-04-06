@@ -2,6 +2,9 @@
 #include "commonMath.hpp"
 #include <iostream>
 
+
+#include "gameobjectspool.hpp"
+
 /*
 
 Wait for the previous frame to finish
@@ -88,7 +91,7 @@ float currentAngle{50.f};
 
 void HelloTriangleApplication::updateUniformBuffer(uint32_t currentImg) {
 	struct Cam {
-		glm::vec3 pos{ 0.f, 3.f, -9.f };
+		glm::vec3 pos{ 0.f, 0.f, 0.f };
 	};
 
 	Cam cam{};
@@ -104,7 +107,9 @@ void HelloTriangleApplication::updateUniformBuffer(uint32_t currentImg) {
 
 	ubo.view = camTranslate;
 
-	ubo.projection = projection(window, 45.f, 0.1f, 10.f);
+	ubo.projection = projection(window, 100.f, 0.1f, 10.f);
 
 	memcpy(mappedData[currentImg], &ubo, sizeof(ubo));
+
+	memcpy(mappedData2[currentImg], gameObjects.gameObjInfoCollection.data(), sizeof(gameObjects.gameObjInfoCollection[0]) * gameObjects.gameObjInfoCollection.size());
 }

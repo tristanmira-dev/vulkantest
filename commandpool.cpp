@@ -70,7 +70,14 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 	commandBuffer.setViewport(0, vk::Viewport(0.f, 0.f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.f, 0.f));
 	commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), swapChainExtent));
 
-	commandBuffer.drawIndexed(indices.size(), 1, 0, 0, 0);
+
+	size_t totalGameObjsP{ gameObjects.gameObjInfoCollection.size() };
+	uint32_t offset{};
+	for (size_t i{}; i < totalGameObjsP; ++i) {
+		commandBuffer.pushConstants<int>(pipelineLayout, vk::ShaderStageFlagBits::eVertex, 0, static_cast<int>(i));
+		commandBuffer.drawIndexed(gameObjects.verticesInformation[i], 1, offset, 0, 0);
+		offset += gameObjects.verticesInformation[i];
+	}
 
 
 	commandBuffer.endRendering();

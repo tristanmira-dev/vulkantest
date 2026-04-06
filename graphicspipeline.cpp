@@ -11,8 +11,8 @@ vk::raii::ShaderModule HelloTriangleApplication::createShaderModule(std::vector<
 
 
 void HelloTriangleApplication::createDescriptorSetLayout() {
-	vk::DescriptorSetLayoutBinding uboLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex, nullptr);
-	vk::DescriptorSetLayoutCreateInfo layoutInfo{.bindingCount = 1, .pBindings = &uboLayoutBinding};
+	vk::DescriptorSetLayoutBinding uboLayoutBinding[2] = { vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex, nullptr), vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex, nullptr) };
+	vk::DescriptorSetLayoutCreateInfo layoutInfo{.bindingCount = 2, .pBindings = uboLayoutBinding};
 	descriptorSetLayout = vk::raii::DescriptorSetLayout(device, layoutInfo);
 }
 
@@ -38,6 +38,8 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 	/*Vertex input----------------*/
 	auto bindingDescription{ Vertex::getBindingDescription() };
 	auto attributeDescription{ Vertex::getAttributeDescription() };
+
+
 	
 	vk::PipelineVertexInputStateCreateInfo vertexInputInfo{ 
 		.vertexBindingDescriptionCount = 1, 
@@ -68,7 +70,7 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 
 
 	/*Rasterizer*/
-	vk::PipelineRasterizationStateCreateInfo rasterizer{ .depthClampEnable = vk::False, .rasterizerDiscardEnable = vk::False, .polygonMode = vk::PolygonMode::eFill, .cullMode = vk::CullModeFlagBits::eNone,
+	vk::PipelineRasterizationStateCreateInfo rasterizer{ .depthClampEnable = vk::False, .rasterizerDiscardEnable = vk::False, .polygonMode = vk::PolygonMode::eFill, .cullMode = vk::CullModeFlagBits::eBack,
 		.frontFace = vk::FrontFace::eCounterClockwise, .depthBiasEnable = vk::False, .depthBiasSlopeFactor = 1.f, .lineWidth = 1.f
 	};
 
@@ -85,8 +87,14 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 	vk::PipelineColorBlendStateCreateInfo colorBlending{ .logicOpEnable = vk::False, .logicOp = vk::LogicOp::eCopy, .attachmentCount = 1, .pAttachments = &colorBlendAttachment };
 
 
+	vk::PushConstantRange pushConstRange{
+		.stageFlags = vk::ShaderStageFlagBits::eVertex,
+		.offset = 0,
+		.size = sizeof(int),
+	};
+
 	/*Pipeline Layout*/
-	vk::PipelineLayoutCreateInfo layoutCreateInfo{ .setLayoutCount = 1, .pSetLayouts = &*descriptorSetLayout ,.pushConstantRangeCount = 0, .pPushConstantRanges = nullptr }; /*"my shaders don't use any uniforms or push constants right now."*/
+	vk::PipelineLayoutCreateInfo layoutCreateInfo{ .setLayoutCount = 1, .pSetLayouts = &*descriptorSetLayout ,.pushConstantRangeCount = 1, .pPushConstantRanges = &pushConstRange }; /*"my shaders don't use any uniforms or push constants right now."*/
 	pipelineLayout = vk::raii::PipelineLayout(device, layoutCreateInfo);
 
 	/*Rendering, Pipeline creation*/

@@ -1,10 +1,21 @@
+struct PushConstant {
+    int idx;
+}
+
+[[vk_push_constant]]
+PushConstant constant;
+
 struct UniformBuffer {
     float4x4 model;
     float4x4 view;
     float4x4 proj;
 }
+struct GameObjectProps {
+    float4x4 pos;
+}
 
 ConstantBuffer<UniformBuffer> ubo;
+StructuredBuffer<GameObjectProps> gop;
 
 
 struct VSInput {
@@ -20,7 +31,7 @@ struct VertexOutput {
 [shader("vertex")]
 VertexOutput vertMain(VSInput input) {
     VertexOutput output;
-    output.sv_position = mul(ubo.proj,mul(ubo.view, mul(ubo.model, float4(input.pos.xy, 0.0, 1.0))));
+    output.sv_position = mul(ubo.proj, mul(ubo.view, mul(gop[constant.idx].pos, float4(input.pos.xy, 4.0, 1.0))));
 	output.color = input.col;
 	return output;
 }

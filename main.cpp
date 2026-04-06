@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdlib>
 
+
 int main() {
     try {
         HelloTriangleApplication app;
