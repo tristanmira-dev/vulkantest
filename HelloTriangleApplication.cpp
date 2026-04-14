@@ -102,12 +102,12 @@ void HelloTriangleApplication::initVulkan() {
     gameObjects.addMeshObject(
         {
             // Front - red
-            {{-1.f, -1.f, 0.f}, {1.0f, 0.0f, 0.0f}},
-            {{ 1.f, -1.f, 0.f}, {1.0f, 0.0f, 0.0f}},
-            {{ 1.f,  1.f, 0.f}, {1.0f, 0.0f, 0.0f}},
-            {{-1.f, -1.f, 0.f}, {1.0f, 0.0f, 0.0f}},
-            {{ 1.f,  1.f, 0.f}, {1.0f, 0.0f, 0.0f}},
-            {{-1.f,  1.f, 0.f}, {1.0f, 0.0f, 0.0f}},
+            {{-1.f, -1.f, 0.f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+            {{ 1.f, -1.f, 0.f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+            {{ 1.f,  1.f, 0.f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
+            {{-1.f, -1.f, 0.f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
+            {{ 1.f,  1.f, 0.f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
+            {{-1.f,  1.f, 0.f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
             // Back - green
             {{-1.f, -1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
             {{-1.f,  1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
@@ -179,6 +179,9 @@ void HelloTriangleApplication::initVulkan() {
     createGraphicsPipeline();
     secondPipeline();
     createCommandPool();
+    createTextureImage();
+    createTextureImageView();
+    createTextureSampler();
     createVertexBuffer();
     createIndexBuffer();
     createUniformBuffers();
@@ -246,7 +249,7 @@ void HelloTriangleApplication::createLogicalDevice() {
 
 
     vk::StructureChain<vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan11Features, vk::PhysicalDeviceVulkan13Features, vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT> featureChain{
-        {},
+        {.features = {.samplerAnisotropy = true}},
         {.shaderDrawParameters = true},
         {.synchronization2 = true, .dynamicRendering = true},
         {.extendedDynamicState = true}
@@ -408,19 +411,15 @@ void HelloTriangleApplication::mainLoop() {
 
         glfwSetWindowUserPointer(window, this);
 
-        glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-            HelloTriangleApplication* ptr{ reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window)) };
-
-            if (key == GLFW_KEY_W) {
-                ptr->cam.pos.z += ptr->deltaTime * 500.f;
-            }if (key == GLFW_KEY_S) {
-                ptr->cam.pos.z -= ptr->deltaTime * 500.f;
-            }if (key == GLFW_KEY_A) {
-                ptr->cam.pos.x -= ptr->deltaTime * 500.f;
-            }if (key == GLFW_KEY_D) {
-                ptr->cam.pos.x += ptr->deltaTime * 500.f;
-            }
-        });
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            this->cam.pos.z += this->deltaTime * 20.f;     
+        } if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            this->cam.pos.z -= this->deltaTime * 20.f;
+        } if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            this->cam.pos.x -= this->deltaTime * 20.f;
+        } if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            this->cam.pos.x += this->deltaTime * 20.f;
+        }
 
         auto endTime = std::chrono::high_resolution_clock::now() - startTime;
 
@@ -513,6 +512,7 @@ uint32_t HelloTriangleApplication::findMemoryType(uint32_t typeFilter, vk::Memor
 
     throw std::runtime_error("Fresh outta luck pal, no memory types are available for u!");
 }
+
 
 namespace {
     /*NON CLASS MEMBER FUNCTIONS!*/

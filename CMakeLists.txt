@@ -9,6 +9,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_HOME_DIRECTORY}/cmake/modules")
 
 find_package (Vulkan REQUIRED)
 find_package (glfw3 REQUIRED)
+find_package (Stb REQUIRED)
 
 
 include(${CMAKE_SOURCE_DIR}/cmake/utils/compileShader.cmake)
@@ -58,9 +59,10 @@ target_compile_definitions(mainStuff PRIVATE GLM_FORCE_DEPTH_ZERO_TO_ONE)
 
 #Headers for root
 target_include_directories(mainStuff PRIVATE include)
+target_include_directories(mainStuff PRIVATE ${Stb_INCLUDE_DIR})
 
 #EXTRA SOURCES
-target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp graphicspipeline.cpp commandpool.cpp draw.cpp vertex.cpp buffers.cpp commonMath.cpp include/gameobjectspool.hpp)
+target_sources(mainStuff PRIVATE extensions.cpp HelloTriangleApplication.cpp graphicspipeline.cpp commandpool.cpp draw.cpp vertex.cpp buffers.cpp commonMath.cpp textures.cpp stbImplementation.cpp include/gameobjectspool.hpp)
 
 target_link_libraries(mainStuff PRIVATE Vulkan::Vulkan)
 target_link_libraries(mainStuff PRIVATE glfw)

@@ -1,17 +1,10 @@
 #include "HelloTriangleApplication.hpp"
 
 void HelloTriangleApplication::copyBuffer(vk::raii::Buffer &stagingBuffer, vk::raii::Buffer &vertexBuffer, vk::DeviceSize size) {
-	vk::CommandBufferAllocateInfo allocateInfo{ .commandPool = commandPool, .level = vk::CommandBufferLevel::ePrimary, .commandBufferCount = 1 };
-	vk::raii::CommandBuffer commandBuff = std::move(vk::raii::CommandBuffers(device, allocateInfo).front());
-	commandBuff.begin(vk::CommandBufferBeginInfo{ .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit });
-
+	vk::raii::CommandBuffer commandBuff = beginSingleTimeCommand();
 	commandBuff.copyBuffer(stagingBuffer, vertexBuffer, vk::BufferCopy(0, 0, size));
-
-	commandBuff.end();
-
-	graphicsQueue.submit(vk::SubmitInfo{ .commandBufferCount = 1, .pCommandBuffers = &*commandBuff }, nullptr);
-
-	graphicsQueue.waitIdle();
+	endSingleTimeCommands(commandBuff);
+	
 }
 
 void HelloTriangleApplication::createVertexBuffer() {
@@ -101,11 +94,13 @@ void HelloTriangleApplication::createUniformBuffers() {
 }
 
 void HelloTriangleApplication::createDescriptorPool() {
-	std::array<vk::DescriptorPoolSize, 2> poolSize{
+	std::array<vk::DescriptorPoolSize, 3> poolSize{
 		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, MAX_FRAMES_IN_FLIGHT),
-		vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer, MAX_FRAMES_IN_FLIGHT)
+		vk::DescriptorPoolSize(vk::DescriptorType::eStorageBuffer, MAX_FRAMES_IN_FLIGHT),
+		vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_FRAMES_IN_FLIGHT)
 	};
-	vk::DescriptorPoolCreateInfo layoutInfo{ .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, .maxSets = MAX_FRAMES_IN_FLIGHT, .poolSizeCount = 2, .pPoolSizes = poolSize.data() };
+
+	vk::DescriptorPoolCreateInfo layoutInfo{ .flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet, .maxSets = MAX_FRAMES_IN_FLIGHT, .poolSizeCount = static_cast<uint32_t>(poolSize.size()), .pPoolSizes = poolSize.data() };
 	descriptorPool = vk::raii::DescriptorPool(device, layoutInfo);
 }
 
@@ -119,9 +114,12 @@ void HelloTriangleApplication::createDescriptorSets() {
 	for (int i{}; i < MAX_FRAMES_IN_FLIGHT; ++i) {
 		vk::DescriptorBufferInfo bufferInfo{ .buffer = uniformBuffer[i], .offset = 0, .range = sizeof(UniformBufferObject) };
 		vk::DescriptorBufferInfo bufferInfo2{ .buffer = uniformBuffer2[i], .offset = 0, .range = sizeof(GameObjectInfo) * gameObjects.vertices.size() };
-		vk::WriteDescriptorSet descriptorWrite[2]{ 
+		vk::DescriptorImageInfo imageInfo{ .sampler = textureSampler, .imageView = textureImageView, .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal };
+
+		vk::WriteDescriptorSet descriptorWrite[3]{ 
 			{.dstSet = descriptorSets[i], .dstBinding = 0, .dstArrayElement = 0, .descriptorCount = 1, .descriptorType = vk::DescriptorType::eUniformBuffer, .pBufferInfo = &bufferInfo },
-			{.dstSet = descriptorSets[i], .dstBinding = 1, .dstArrayElement = 0, .descriptorCount = 1, .descriptorType = vk::DescriptorType::eStorageBuffer, .pBufferInfo = &bufferInfo2 }
+			{.dstSet = descriptorSets[i], .dstBinding = 1, .dstArrayElement = 0, .descriptorCount = 1, .descriptorType = vk::DescriptorType::eStorageBuffer, .pBufferInfo = &bufferInfo2 },
+			{.dstSet = descriptorSets[i], .dstBinding = 2, .dstArrayElement = 0, .descriptorCount = 1, .descriptorType = vk::DescriptorType::eCombinedImageSampler, .pImageInfo = &imageInfo }
 		};
 
 

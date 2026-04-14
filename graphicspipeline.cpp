@@ -11,8 +11,13 @@ vk::raii::ShaderModule HelloTriangleApplication::createShaderModule(std::vector<
 
 
 void HelloTriangleApplication::createDescriptorSetLayout() {
-	vk::DescriptorSetLayoutBinding uboLayoutBinding[2] = { vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex, nullptr), vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex, nullptr) };
-	vk::DescriptorSetLayoutCreateInfo layoutInfo{.bindingCount = 2, .pBindings = uboLayoutBinding};
+	vk::DescriptorSetLayoutBinding uboLayoutBinding[3] = {
+		vk::DescriptorSetLayoutBinding(0, vk::DescriptorType::eUniformBuffer, 1, vk::ShaderStageFlagBits::eVertex, nullptr),
+		vk::DescriptorSetLayoutBinding(1, vk::DescriptorType::eStorageBuffer, 1, vk::ShaderStageFlagBits::eVertex, nullptr),
+		vk::DescriptorSetLayoutBinding(2, vk::DescriptorType::eCombinedImageSampler, 1, vk::ShaderStageFlagBits::eFragment, nullptr)
+	};
+
+	vk::DescriptorSetLayoutCreateInfo layoutInfo{.bindingCount = 3, .pBindings = uboLayoutBinding};
 	descriptorSetLayout = vk::raii::DescriptorSetLayout(device, layoutInfo);
 }
 

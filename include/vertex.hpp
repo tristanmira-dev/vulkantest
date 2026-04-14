@@ -10,15 +10,17 @@
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec3 col;
+	glm::vec2 uv{0.f, 0.f};
 
 	static vk::VertexInputBindingDescription getBindingDescription() {
 		return { 0, sizeof(Vertex), vk::VertexInputRate::eVertex };
 	}
 
-	static std::array<vk::VertexInputAttributeDescription, 2> getAttributeDescription() {
+	static std::array<vk::VertexInputAttributeDescription, 3> getAttributeDescription() {
 		return {
-			vk::VertexInputAttributeDescription{0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, pos) },
-			vk::VertexInputAttributeDescription{1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, col) }
+			vk::VertexInputAttributeDescription{ 0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, pos) },
+			vk::VertexInputAttributeDescription{ 1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, col) },
+			vk::VertexInputAttributeDescription{ 2, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, uv) }
 		};
 	}
 };

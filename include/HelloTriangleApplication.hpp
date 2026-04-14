@@ -155,7 +155,9 @@ private:
         std::vector<vk::raii::Buffer> uniformBuffer;
         std::vector<vk::raii::DeviceMemory> uniformBufferMemory;
         std::vector<void*> mappedData;
+
         vk::raii::DescriptorPool descriptorPool{ nullptr };
+
         std::vector<vk::raii::DescriptorSet> descriptorSets;
         std::vector<vk::raii::Buffer> uniformBuffer2;
         std::vector<vk::raii::DeviceMemory> uniformBufferMemory2;
@@ -171,6 +173,27 @@ private:
         void createUniformBuffers();
         void updateUniformBuffer(uint32_t currentImg);
 
+    /*Textures*/
+        void createTextureImage();
+
+        void createTextureImageView();
+
+        void createTextureSampler();
+
+        vk::raii::Image textureImage{ nullptr };
+        vk::raii::Sampler textureSampler{ nullptr };
+        vk::raii::ImageView textureImageView{ nullptr };
+        vk::raii::DeviceMemory textureImageMemory{ nullptr };
+
+        vk::raii::CommandBuffer beginSingleTimeCommand();
+
+        void transitionImageLayout(const vk::raii::Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
+
+        /*invokes submitting to the graphics queue and waitIdle*/
+        void endSingleTimeCommands(vk::raii::CommandBuffer& commandBuffer);
+
+        void createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::raii::Image& image, vk::raii::DeviceMemory& deviceMemory);
+        void copyBufferToImage(const vk::raii::Buffer& buffer, vk::raii::Image& image, uint32_t width, uint32_t height);
 };
 
 
