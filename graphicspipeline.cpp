@@ -75,7 +75,7 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 
 
 	/*Rasterizer*/
-	vk::PipelineRasterizationStateCreateInfo rasterizer{ .depthClampEnable = vk::False, .rasterizerDiscardEnable = vk::False, .polygonMode = vk::PolygonMode::eFill, .cullMode = vk::CullModeFlagBits::eBack,
+	vk::PipelineRasterizationStateCreateInfo rasterizer{ .depthClampEnable = vk::False, .rasterizerDiscardEnable = vk::False, .polygonMode = vk::PolygonMode::eFill, .cullMode = vk::CullModeFlagBits::eNone,
 		.frontFace = vk::FrontFace::eCounterClockwise, .depthBiasEnable = vk::False, .depthBiasSlopeFactor = 1.f, .lineWidth = 1.f
 	};
 
@@ -85,6 +85,13 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 
 	/*Depth and stencil testing*/
 	/*VkPipelineDepthStencilStateCreateInfo. We don’t have one right now, so we can simply pass a nullptr instead of a pointer to such a struct. We’ll get back to it in the depth buffering chapter.*/
+	vk::PipelineDepthStencilStateCreateInfo depthStencil{
+		.depthTestEnable = vk::True,
+		.depthWriteEnable = vk::True,
+		.depthCompareOp = vk::CompareOp::eLess,
+		.depthBoundsTestEnable = vk::False,
+		.stencilTestEnable = vk::False
+	};
 
 	/*Color Blending*/
 	/*color blending is essentially just for either using whats already on the framebuffer and blending it with the fragment shader output or just taking the framebuffer output directly*/
@@ -102,17 +109,21 @@ void HelloTriangleApplication::createGraphicsPipeline() {
 	vk::PipelineLayoutCreateInfo layoutCreateInfo{ .setLayoutCount = 1, .pSetLayouts = &*descriptorSetLayout ,.pushConstantRangeCount = 1, .pPushConstantRanges = &pushConstRange }; /*"my shaders don't use any uniforms or push constants right now."*/
 	pipelineLayout = vk::raii::PipelineLayout(device, layoutCreateInfo);
 
+	vk::Format depthFormat{ findDepthFormat() };
+
 	/*Rendering, Pipeline creation*/
 	vk::StructureChain<vk::GraphicsPipelineCreateInfo, vk::PipelineRenderingCreateInfo> chain{
 		{
 			.stageCount = 2, .pStages = shadersStage, .pVertexInputState = &vertexInputInfo, .pInputAssemblyState = &inputAssemblyInfo,
 			.pViewportState = &viewportState, .pRasterizationState = &rasterizer, .pMultisampleState = &multisampling,
+
+			.pDepthStencilState = &depthStencil,
 			.pColorBlendState = &colorBlending,
 			.pDynamicState = &dynamicState,
 			.layout = pipelineLayout,
 			.renderPass = nullptr /*Note that the renderPass parameter is set to nullptr because we’re using dynamic rendering instead of a traditional render pass.*/
 		},
-		{.colorAttachmentCount = 1, .pColorAttachmentFormats = &swapChainSurfaceFormat.format}
+		{.colorAttachmentCount = 1, .pColorAttachmentFormats = &swapChainSurfaceFormat.format, .depthAttachmentFormat = depthFormat}
 	};
 
 	/*

@@ -134,7 +134,8 @@ private:
 
     void createSyncObjects();
 
-
+    float angleX{};
+    float angleY{};
 
     void createDescriptorSetLayout();
 
@@ -142,7 +143,7 @@ private:
         void createCommandPool();
         void createCommandBuffer();
         void recordCommandBuffer(uint32_t imageIdx);
-        void transition_image_layout(uint32_t imageIdx, vk::ImageLayout oldLayout, vk::ImageLayout imageLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask);
+        void transition_image_layout(vk::Image const &image, vk::ImageLayout oldLayout, vk::ImageLayout imageLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask, vk::ImageAspectFlags aspectFlag);
 
     /*BUFFERS*/
         /*Vertex Buffers*/
@@ -186,7 +187,6 @@ private:
         vk::raii::DeviceMemory textureImageMemory{ nullptr };
 
         vk::raii::CommandBuffer beginSingleTimeCommand();
-
         void transitionImageLayout(const vk::raii::Image& image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
         /*invokes submitting to the graphics queue and waitIdle*/
@@ -194,6 +194,20 @@ private:
 
         void createImage(uint32_t width, uint32_t height, vk::Format format, vk::ImageTiling tiling, vk::ImageUsageFlags usage, vk::MemoryPropertyFlags properties, vk::raii::Image& image, vk::raii::DeviceMemory& deviceMemory);
         void copyBufferToImage(const vk::raii::Buffer& buffer, vk::raii::Image& image, uint32_t width, uint32_t height);
+
+    /*Depth*/
+        vk::raii::Image depthImage{ nullptr };
+        vk::raii::ImageView depthImageView{ nullptr };
+        vk::raii::DeviceMemory depthImageDeviceMemory{ nullptr };
+        vk::Format findSupportedFormat(const std::vector<vk::Format>& candidates, vk::ImageTiling tiling, vk::FormatFeatureFlags features);
+        vk::Format findDepthFormat();
+        bool hasStencilComponent(vk::Format format);
+        void createDepthResource();
+
+        vk::raii::ImageView createImageViewHelper(vk::raii::Image& image, vk::Format const& format, vk::ImageAspectFlags aspectFlags);
+
+    /*Load Model*/
+        void loadModel();
 };
 
 

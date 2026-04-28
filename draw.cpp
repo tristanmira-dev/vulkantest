@@ -94,7 +94,8 @@ void HelloTriangleApplication::updateUniformBuffer(uint32_t currentImg) {
 
 	float rotationSpeed{ 1.f };
 	UniformBufferObject ubo{};
-	ubo.model = glm::rotate(glm::mat4(1.f), currentAngle += deltaTime * rotationSpeed, glm::vec3(0.f, 0.f, 1.f));
+	ubo.model = glm::rotate(glm::mat4(1.f), angleX, glm::vec3(1.f, 0.f, 0.f));
+	ubo.model = ubo.model * glm::rotate(glm::mat4(1.f), angleY, glm::vec3(0.f, 1.f, 0.f));
 
 	glm::mat4 camTranslate{ glm::identity<glm::mat4>() };
 	camTranslate[3][0] = -cam.pos.x;

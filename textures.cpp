@@ -10,7 +10,6 @@ void HelloTriangleApplication::copyBufferToImage(const vk::raii::Buffer& buffer,
 
 	commandBuffer.copyBufferToImage(buffer, textureImage, vk::ImageLayout::eTransferDstOptimal, { region });
 
-
 	endSingleTimeCommands(commandBuffer);
 }
 
@@ -100,7 +99,7 @@ void HelloTriangleApplication::createImage(uint32_t width, uint32_t height, vk::
 void HelloTriangleApplication::createTextureImage() {
 	int texWidth, texHeight, texChannels;
 
-	stbi_uc* pixels{ stbi_load("E:/Important_Repos/vulkan/vulkantest/extern/assets/eddieblanket_edge.png" /*yeah find a way to handle paths better, not just for assets but for shaders too, probably would just involve copying the files over with cmake maybe?*/, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha)};
+	stbi_uc* pixels{ stbi_load("E:/Important_Repos/vulkan/vulkantest/extern/assets/viking_room.png" /*yeah find a way to handle paths better, not just for assets but for shaders too, probably would just involve copying the files over with cmake maybe?*/, &texWidth, &texHeight, &texChannels, STBI_rgb_alpha)};
 	vk::DeviceSize imageSize{ static_cast<uint64_t>(texWidth) * static_cast<uint64_t>(texHeight) * 4 };
 
 	if (!pixels) {
@@ -133,6 +132,12 @@ void HelloTriangleApplication::createTextureImageView() {
 
 	textureImageView = vk::raii::ImageView(device, imageInfo);
 
+}
+
+vk::raii::ImageView HelloTriangleApplication::createImageViewHelper(vk::raii::Image &image, vk::Format const &format, vk::ImageAspectFlags aspectFlags) {
+	vk::ImageViewCreateInfo info{ .image = image, .viewType = vk::ImageViewType::e2D, .format = format, .subresourceRange = {aspectFlags, 0, 1, 0, 1} };
+
+	return vk::raii::ImageView(device, info);
 }
 
 void HelloTriangleApplication::createTextureSampler() {

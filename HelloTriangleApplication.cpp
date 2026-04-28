@@ -24,6 +24,7 @@ constexpr int WIDTH{ 800 };
 constexpr int HEIGHT{ 600 };
 
 
+
 namespace {
     vk::SurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<vk::SurfaceFormatKHR>& availableFormats);
     vk::PresentModeKHR chooseSwapPresentMode(const std::vector<vk::PresentModeKHR>& availPresentModes);
@@ -98,73 +99,13 @@ void HelloTriangleApplication::initVulkan() {
     PLACEHOLDER FIND A BETTER SPOT FOR THESE INITS
     */
 
-
-    gameObjects.addMeshObject(
-        {
-            // Front - red
-            {{-1.f, -1.f, 0.f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-            {{ 1.f, -1.f, 0.f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
-            {{ 1.f,  1.f, 0.f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
-            {{-1.f, -1.f, 0.f}, {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f}},
-            {{ 1.f,  1.f, 0.f}, {1.0f, 0.0f, 0.0f}, {1.0f, 1.0f}},
-            {{-1.f,  1.f, 0.f}, {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f}},
-            // Back - green
-            {{-1.f, -1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
-            {{-1.f,  1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
-            {{ 1.f,  1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
-            {{-1.f, -1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
-            {{ 1.f,  1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
-            {{ 1.f, -1.f, 2.f}, {0.0f, 1.0f, 0.0f}},
-            // Top - blue
-            {{-1.f,  1.f, 0.f}, {0.0f, 0.0f, 1.0f}},
-            {{ 1.f,  1.f, 0.f}, {0.0f, 0.0f, 1.0f}},
-            {{ 1.f,  1.f, 2.f}, {0.0f, 0.0f, 1.0f}},
-            {{-1.f,  1.f, 0.f}, {0.0f, 0.0f, 1.0f}},
-            {{ 1.f,  1.f, 2.f}, {0.0f, 0.0f, 1.0f}},
-            {{-1.f,  1.f, 2.f}, {0.0f, 0.0f, 1.0f}},
-            // Bottom - yellow
-            {{-1.f, -1.f, 0.f}, {1.0f, 1.0f, 0.0f}},
-            {{-1.f, -1.f, 2.f}, {1.0f, 1.0f, 0.0f}},
-            {{ 1.f, -1.f, 2.f}, {1.0f, 1.0f, 0.0f}},
-            {{-1.f, -1.f, 0.f}, {1.0f, 1.0f, 0.0f}},
-            {{ 1.f, -1.f, 2.f}, {1.0f, 1.0f, 0.0f}},
-            {{ 1.f, -1.f, 0.f}, {1.0f, 1.0f, 0.0f}},
-            // Right - magenta
-            {{ 1.f, -1.f, 0.f}, {1.0f, 0.0f, 1.0f}},
-            {{ 1.f, -1.f, 2.f}, {1.0f, 0.0f, 1.0f}},
-            {{ 1.f,  1.f, 2.f}, {1.0f, 0.0f, 1.0f}},
-            {{ 1.f, -1.f, 0.f}, {1.0f, 0.0f, 1.0f}},
-            {{ 1.f,  1.f, 2.f}, {1.0f, 0.0f, 1.0f}},
-            {{ 1.f,  1.f, 0.f}, {1.0f, 0.0f, 1.0f}},
-            // Left - cyan
-            {{-1.f, -1.f, 0.f}, {0.0f, 1.0f, 1.0f}},
-            {{-1.f,  1.f, 0.f}, {0.0f, 1.0f, 1.0f}},
-            {{-1.f,  1.f, 2.f}, {0.0f, 1.0f, 1.0f}},
-            {{-1.f, -1.f, 0.f}, {0.0f, 1.0f, 1.0f}},
-            {{-1.f,  1.f, 2.f}, {0.0f, 1.0f, 1.0f}},
-            {{-1.f, -1.f, 2.f}, {0.0f, 1.0f, 1.0f}},
-        },
-        std::vector<uint32_t> {
-            0, 1, 2, 3, 4, 5,
-            6, 7, 8, 9, 10, 11,
-            12, 13, 14, 15, 16, 17,
-            18, 19, 20, 21, 22, 23,
-            24, 25, 26, 27, 28, 29,
-            30, 31, 32, 33, 34, 35
-        }
-    );
-
-    gameObjects.addGameObject({}, 0);
-
+    loadModel();
+    
     gameObjects.addGameObject({}, 0);
     gameObjects.addGameObject({}, 0);
 
     gameObjects.gameObjInfoCollection[0].moveTo({ -2.f, 0.f, 10.f });
-   
-    gameObjects.gameObjInfoCollection[1].moveTo({ 3.f, 0.f, 10.f });
-    gameObjects.gameObjInfoCollection[2].moveTo({ 0.f, 0.f, 12.f });
-
-
+    gameObjects.gameObjInfoCollection[1].moveTo({ 2.f, 0.f, 10.f });
 
 
     setupDebugMessenger();
@@ -179,6 +120,7 @@ void HelloTriangleApplication::initVulkan() {
     createGraphicsPipeline();
     secondPipeline();
     createCommandPool();
+    createDepthResource();
     createTextureImage();
     createTextureImageView();
     createTextureSampler();
@@ -371,6 +313,7 @@ void HelloTriangleApplication::recreateSwapChain() {
     cleanupSwapChain();
     createSwapChain();
     createImageView();
+    createDepthResource();
 }
 
 void HelloTriangleApplication::cleanupSwapChain() {
@@ -419,6 +362,10 @@ void HelloTriangleApplication::mainLoop() {
             this->cam.pos.x -= this->deltaTime * 20.f;
         } if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
             this->cam.pos.x += this->deltaTime * 20.f;
+        } if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+            this->angleX += this->deltaTime * 20.f;
+        } if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+            this->angleY += this->deltaTime * 20.f;
         }
 
         auto endTime = std::chrono::high_resolution_clock::now() - startTime;

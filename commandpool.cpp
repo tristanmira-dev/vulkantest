@@ -29,9 +29,20 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 	eColorAttachmentOutput (srcStage) — wait for the color output stage to be free
 	eColorAttachmentOutput (dstStage) — the stage that will use it next is also color output
 	*/
-	transition_image_layout(imageIdx, vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, {}, vk::AccessFlagBits2::eColorAttachmentWrite, vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eColorAttachmentOutput);
-	vk::ClearValue clearColor{ vk::ClearColorValue(0.f,0.f,0.f,1.f) };
+	transition_image_layout(swapChainImages[imageIdx], vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal, {}, vk::AccessFlagBits2::eColorAttachmentWrite, vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::ImageAspectFlagBits::eColor);
+	transition_image_layout(
+		*depthImage,
+		vk::ImageLayout::eUndefined,
+		vk::ImageLayout::eDepthAttachmentOptimal,
+		vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+		vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+		vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+		vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
+		vk::ImageAspectFlagBits::eDepth
+	);
 
+	vk::ClearValue clearColor{ vk::ClearColorValue(0.f,0.f,0.f,1.f) };
+	vk::ClearDepthStencilValue depthClearValue{ .depth = 1.f, .stencil = 0 };
 
 	/*imageView — which swapchain image view to render to
 	imageLayout — the layout it's in (you just transitioned it to COLOR_ATTACHMENT_OPTIMAL)
@@ -46,6 +57,14 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 		.clearValue = clearColor
 	};
 
+	vk::RenderingAttachmentInfo depthAttachmentInfo{
+		.imageView = depthImageView,
+		.imageLayout = vk::ImageLayout::eDepthAttachmentOptimal,
+		.loadOp = vk::AttachmentLoadOp::eClear,
+		.storeOp = vk::AttachmentStoreOp::eDontCare,
+		.clearValue = depthClearValue
+	};
+
 	/*"color attachment" = the image where your pixel colors end up. Your swapchain image is the color attachment.*/
 
 	/*renderArea — draw over the whole swapchain (starting at 0,0, full extent)
@@ -55,7 +74,8 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 		.renderArea = {.offset = {0, 0}, .extent = swapChainExtent},
 		.layerCount = 1,
 		.colorAttachmentCount = 1,
-		.pColorAttachments = &attachmentInfo
+		.pColorAttachments = &attachmentInfo,
+		.pDepthAttachment = &depthAttachmentInfo
 	};
 
 	commandBuffer.beginRendering(renderingInfo);
@@ -67,7 +87,7 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 	commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipelineLayout, 0, *descriptorSets[frameIdx], nullptr);
 	commandBuffer.bindIndexBuffer(*indexBuffer, 0, vk::IndexType::eUint32);
 
-	commandBuffer.setViewport(0, vk::Viewport(0.f, 0.f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.f, 0.f));
+	commandBuffer.setViewport(0, vk::Viewport(0.f, 0.f, static_cast<float>(swapChainExtent.width), static_cast<float>(swapChainExtent.height), 0.f, 1.f));
 	commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), swapChainExtent));
 
 
@@ -99,7 +119,7 @@ void HelloTriangleApplication::recordCommandBuffer(uint32_t imageIdx) {
 	
 	*/
 
-	transition_image_layout(imageIdx, vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR, vk::AccessFlagBits2::eColorAttachmentWrite, {}, vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eBottomOfPipe);
+	transition_image_layout(swapChainImages[imageIdx], vk::ImageLayout::eColorAttachmentOptimal, vk::ImageLayout::ePresentSrcKHR, vk::AccessFlagBits2::eColorAttachmentWrite, {}, vk::PipelineStageFlagBits2::eColorAttachmentOutput, vk::PipelineStageFlagBits2::eBottomOfPipe, vk::ImageAspectFlagBits::eColor);
 
 	commandBuffer.end();
 }
@@ -121,7 +141,7 @@ baseMipLevel / levelCount — which mip levels (you have 1, starting at 0)
 baseArrayLayer / layerCount — which array layers (you have 1, starting at 0). Array layers are for things like cubemaps which have 6 faces in one image
 
 */
-void HelloTriangleApplication::transition_image_layout(uint32_t imageIdx, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask) {
+void HelloTriangleApplication::transition_image_layout(vk::Image const &image, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::AccessFlags2 srcAccessMask, vk::AccessFlags2 dstAccessMask, vk::PipelineStageFlags2 srcStageMask, vk::PipelineStageFlags2 dstStageMask, vk::ImageAspectFlags aspectFlag) {
 	vk::ImageMemoryBarrier2 imageTransitionAndWait{
 		.srcStageMask = srcStageMask,
 		.srcAccessMask = srcAccessMask,
@@ -131,9 +151,9 @@ void HelloTriangleApplication::transition_image_layout(uint32_t imageIdx, vk::Im
 		.newLayout = newLayout,
 		.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
 		.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-		.image = swapChainImages[imageIdx],
+		.image = image,
 		.subresourceRange = {
-			.aspectMask = vk::ImageAspectFlagBits::eColor,
+			.aspectMask = aspectFlag,
 			.baseMipLevel = 0,
 			.levelCount = 1,
 			.baseArrayLayer = 0,
@@ -145,7 +165,7 @@ void HelloTriangleApplication::transition_image_layout(uint32_t imageIdx, vk::Im
 	vk::DependencyInfo dependencyInfo{
 		.dependencyFlags = {},
 		.imageMemoryBarrierCount = 1,
-		.pImageMemoryBarriers = &imageTransitionAndWait /* "everything before this barrier must finish before anything after it can start.", The layout transition is the barrier. It's the wall itself. */
+		.pImageMemoryBarriers = &imageTransitionAndWait /* "everything before this barrier must finish before anything after it can start.", The layout transition is the barrier */
 	};
 
 	commandBuffers[frameIdx].pipelineBarrier2(dependencyInfo);

@@ -34,7 +34,7 @@ struct VertexOutput {
 [shader("vertex")]
 VertexOutput vertMain(VSInput input) {
     VertexOutput output;
-    output.sv_position = mul(ubo.proj,  mul(ubo.view, mul(gop[constant.idx].pos, float4(input.pos.xyz, 1.0))));
+    output.sv_position = mul(ubo.proj, mul(ubo.view, mul(gop[constant.idx].pos, mul(ubo.model, float4(input.pos.xyz, 1.0)))));
     output.color = input.col;
     output.uv = input.uv;
 	return output;

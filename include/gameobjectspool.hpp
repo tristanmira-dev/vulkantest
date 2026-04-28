@@ -22,7 +22,7 @@ struct GameObjectPool {
 	std::vector<Vertex> vertices;
 	std::vector<GameObjectInfo> gameObjInfoCollection;
 	std::vector<uint32_t> indices;
-	std::vector<VertexInfo> verticesInformation;
+	std::vector<VertexInfo> verticesInformation; /*Must match the index of the mesh you want*/
 	std::vector<uint32_t> meshIdx;
 
 	void addGameObject(GameObjectInfo gameObjInfo, uint32_t idx) {
@@ -40,6 +40,15 @@ struct GameObjectPool {
 		addToCollection(indices, index);
 
 		verticesInformation.emplace_back(VertexInfo{ static_cast<uint32_t>(index.size()), indices.end() - index.size()});
+	}
+
+	void addMeshObject(std::vector<Vertex> const& verticesData, std::vector<uint32_t> index) {
+
+		addToCollection(vertices, verticesData);
+
+		addToCollection(indices, index);
+
+		verticesInformation.emplace_back(VertexInfo{ static_cast<uint32_t>(index.size()), indices.end() - index.size() });
 	}
 };
 
